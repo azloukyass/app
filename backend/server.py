@@ -1,89 +1,453 @@
-from fastapi import FastAPI, APIRouter
 from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
-import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
-import uuid
-from datetime import datetime, timezone
-
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv(ROOT_DIR / ".env")
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+import os
+import logging
+import uuid
+import bcrypt
+import jwt
+import httpx
+from datetime import datetime, timezone, timedelta
+from typing import Optional, List
+
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from starlette.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import BaseModel, EmailStr
+
+from catalog_data import CATALOG, get_section, get_category, find_part
+
+mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ["DB_NAME"]]
 
-# Create the main app without a prefix
-app = FastAPI()
-
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
+JWT_ALGORITHM = "HS256"
 
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+def get_jwt_secret() -> str:
+    return os.environ["JWT_SECRET"]
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def create_access_token(user_id: str, email: str) -> str:
+    payload = {
+        "sub": user_id,
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(days=7),
+        "type": "access",
+    }
+    return jwt.encode(payload, get_jwt_secret(), algorithm=JWT_ALGORITHM)
+
+
+app = FastAPI(title="BENNOURI Pièces Auto API")
+api = APIRouter(prefix="/api")
+
+
+class RegisterIn(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    phone: Optional[str] = ""
+    address: Optional[str] = ""
+
+
+class LoginIn(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class VinIn(BaseModel):
+    vin: str
+
+
+class CartItem(BaseModel):
+    ref: str
+    quantity: int = 1
+
+
+class OrderIn(BaseModel):
+    items: List[CartItem]
+    vehicle_vin: Optional[str] = ""
+    vehicle_label: Optional[str] = ""
+    shipping_address: str
+    phone: str
+    notes: Optional[str] = ""
+
+
+class OrderStatusIn(BaseModel):
+    status: str
+
+
+async def get_current_user(request: Request) -> dict:
+    token = request.cookies.get("access_token")
+    if not token:
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth[7:]
+    if not token:
+        raise HTTPException(status_code=401, detail="Non authentifié")
+    try:
+        payload = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="Token invalide")
+        user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="Utilisateur introuvable")
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expiré")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token invalide")
+
+
+async def require_admin(user: dict = Depends(get_current_user)) -> dict:
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Accès réservé à l'administrateur")
+    return user
+
+
+def set_auth_cookie(response: Response, token: str):
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=60 * 60 * 24 * 7,
+        path="/",
+    )
+
+
+def user_to_dict(u: dict) -> dict:
+    return {
+        "id": u["id"],
+        "name": u["name"],
+        "email": u["email"],
+        "phone": u.get("phone", ""),
+        "address": u.get("address", ""),
+        "role": u.get("role", "user"),
+        "created_at": u["created_at"],
+    }
+
+
+@api.post("/auth/register")
+async def register(data: RegisterIn, response: Response):
+    email = data.email.lower().strip()
+    if await db.users.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
+    user_id = str(uuid.uuid4())
+    doc = {
+        "id": user_id,
+        "name": data.name.strip(),
+        "email": email,
+        "password_hash": hash_password(data.password),
+        "phone": data.phone or "",
+        "address": data.address or "",
+        "role": "user",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(doc)
+    token = create_access_token(user_id, email)
+    set_auth_cookie(response, token)
+    return {"user": user_to_dict(doc), "token": token}
+
+
+@api.post("/auth/login")
+async def login(data: LoginIn, response: Response):
+    email = data.email.lower().strip()
+    u = await db.users.find_one({"email": email})
+    if not u or not verify_password(data.password, u["password_hash"]):
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
+    token = create_access_token(u["id"], email)
+    set_auth_cookie(response, token)
+    return {"user": user_to_dict(u), "token": token}
+
+
+@api.post("/auth/logout")
+async def logout(response: Response):
+    response.delete_cookie("access_token", path="/")
+    return {"ok": True}
+
+
+@api.get("/auth/me")
+async def me(user: dict = Depends(get_current_user)):
+    return {"user": user_to_dict(user)}
+
+
+@api.get("/catalog/sections")
+async def list_sections():
+    return [
+        {
+            "slug": s,
+            "label": data["label"],
+            "description": data["description"],
+            "icon": data["icon"],
+        }
+        for s, data in CATALOG.items()
+    ]
+
+
+@api.get("/catalog/{section}")
+async def get_section_api(section: str):
+    data = get_section(section)
+    if not data:
+        raise HTTPException(404, "Section introuvable")
+    return {
+        "slug": section,
+        "label": data["label"],
+        "description": data["description"],
+        "categories": [
+            {
+                "slug": c["slug"],
+                "label": c["label"],
+                "icon": c["icon"],
+                "image": c["image"],
+                "count": len(c["parts"]),
+            }
+            for c in data["categories"]
+        ],
+    }
+
+
+@api.get("/catalog/{section}/{category}")
+async def get_category_api(section: str, category: str):
+    cat = get_category(section, category)
+    if not cat:
+        raise HTTPException(404, "Catégorie introuvable")
+    return cat
+
+
+_VIN_FALLBACK = {
+    "WVWZZZ1KZ8W123456": {"make": "Volkswagen", "model": "Golf 5", "year": "2008", "fuel": "Essence", "engine": "1.6 FSI", "trim": "Trendline"},
+    "WAUZZZ8K9CA123456": {"make": "Audi", "model": "A4 B8", "year": "2012", "fuel": "Diesel", "engine": "2.0 TDI", "trim": "Avant"},
+    "WDD2042001A123456": {"make": "Mercedes-Benz", "model": "Classe C W204", "year": "2010", "fuel": "Diesel", "engine": "C220 CDI", "trim": "Avantgarde"},
+    "VF7XXXXXXXXX12345": {"make": "Peugeot", "model": "208", "year": "2015", "fuel": "Essence", "engine": "1.2 PureTech", "trim": "Active"},
+}
+
+
+def _translate_fuel(fuel: str) -> str:
+    f = (fuel or "").lower()
+    if "diesel" in f:
+        return "Diesel"
+    if "gasoline" in f or "petrol" in f:
+        return "Essence"
+    if "electric" in f:
+        return "Électrique"
+    if "hybrid" in f:
+        return "Hybride"
+    if "gas" in f or "lpg" in f:
+        return "GPL"
+    return fuel or "Essence"
+
+
+@api.post("/vin/decode")
+async def decode_vin(payload: VinIn):
+    vin = (payload.vin or "").strip().upper()
+    if len(vin) < 11 or len(vin) > 17:
+        raise HTTPException(400, "Le numéro VIN doit contenir entre 11 et 17 caractères")
+
+    info = None
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as cl:
+            r = await cl.get(
+                f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
+            )
+            if r.status_code == 200:
+                data = r.json().get("Results", [{}])[0]
+                make = (data.get("Make") or "").strip()
+                model = (data.get("Model") or "").strip()
+                year = (data.get("ModelYear") or "").strip()
+                fuel = (data.get("FuelTypePrimary") or "").strip() or "Essence"
+                engine = (data.get("EngineModel") or data.get("DisplacementL") or "").strip()
+                if make and model:
+                    info = {
+                        "make": make.title(),
+                        "model": model,
+                        "year": year,
+                        "fuel": _translate_fuel(fuel),
+                        "engine": engine or "—",
+                        "trim": (data.get("Trim") or "—"),
+                    }
+    except Exception as e:
+        logging.warning(f"NHTSA fail: {e}")
+
+    if not info:
+        info = _VIN_FALLBACK.get(vin)
+
+    if not info:
+        wmi = vin[:3]
+        guess = {
+            "WVW": ("Volkswagen", "Golf", "Essence"),
+            "WAU": ("Audi", "A3", "Diesel"),
+            "WDD": ("Mercedes-Benz", "Classe C", "Diesel"),
+            "WDB": ("Mercedes-Benz", "Classe E", "Diesel"),
+            "VF7": ("Citroën", "C3", "Essence"),
+            "VF1": ("Renault", "Clio", "Essence"),
+            "VF3": ("Peugeot", "208", "Essence"),
+            "WBA": ("BMW", "Série 3", "Essence"),
+            "JTD": ("Toyota", "Corolla", "Essence"),
+            "KMH": ("Hyundai", "i20", "Essence"),
+        }.get(wmi)
+        if guess:
+            info = {
+                "make": guess[0],
+                "model": guess[1],
+                "year": "2015",
+                "fuel": guess[2],
+                "engine": "—",
+                "trim": "—",
+            }
+        else:
+            raise HTTPException(404, "Impossible d'identifier ce VIN. Vérifiez le numéro et réessayez.")
+
+    return {"vin": vin, **info}
+
+
+@api.post("/orders")
+async def create_order(data: OrderIn, user: dict = Depends(get_current_user)):
+    if not data.items:
+        raise HTTPException(400, "Le panier est vide")
+    items_resolved = []
+    total = 0.0
+    for it in data.items:
+        part = find_part(it.ref)
+        if not part:
+            raise HTTPException(400, f"Pièce introuvable: {it.ref}")
+        line_total = part["price_tnd"] * it.quantity
+        total += line_total
+        items_resolved.append({
+            "ref": part["ref"],
+            "name": part["name"],
+            "brand": part["brand"],
+            "image": part["image"],
+            "unit_price_tnd": part["price_tnd"],
+            "quantity": it.quantity,
+            "line_total_tnd": round(line_total, 3),
+        })
+    order = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_email": user["email"],
+        "user_name": user["name"],
+        "items": items_resolved,
+        "total_tnd": round(total, 3),
+        "vehicle_vin": data.vehicle_vin or "",
+        "vehicle_label": data.vehicle_label or "",
+        "shipping_address": data.shipping_address,
+        "phone": data.phone,
+        "notes": data.notes or "",
+        "status": "En attente",
+        "payment_method": "Paiement à la livraison",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.orders.insert_one(order)
+    order.pop("_id", None)
+    return order
+
+
+@api.get("/orders/mine")
+async def my_orders(user: dict = Depends(get_current_user)):
+    docs = await db.orders.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return docs
+
+
+@api.get("/admin/users")
+async def admin_users(admin: dict = Depends(require_admin)):
+    docs = await db.users.find({}, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(1000)
+    return docs
+
+
+@api.get("/admin/orders")
+async def admin_orders(admin: dict = Depends(require_admin)):
+    docs = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return docs
+
+
+@api.get("/admin/stats")
+async def admin_stats(admin: dict = Depends(require_admin)):
+    users_count = await db.users.count_documents({})
+    orders_count = await db.orders.count_documents({})
+    pending = await db.orders.count_documents({"status": "En attente"})
+    pipeline = [{"$group": {"_id": None, "total": {"$sum": "$total_tnd"}}}]
+    revenue_agg = await db.orders.aggregate(pipeline).to_list(1)
+    revenue = round(revenue_agg[0]["total"], 3) if revenue_agg else 0
+    return {
+        "users": users_count,
+        "orders": orders_count,
+        "pending_orders": pending,
+        "revenue_tnd": revenue,
+    }
+
+
+@api.patch("/admin/orders/{order_id}")
+async def update_order_status(order_id: str, payload: OrderStatusIn, admin: dict = Depends(require_admin)):
+    res = await db.orders.update_one({"id": order_id}, {"$set": {"status": payload.status}})
+    if res.matched_count == 0:
+        raise HTTPException(404, "Commande introuvable")
+    return {"ok": True}
+
+
+@api.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"name": "BENNOURI Pièces Auto", "status": "ok"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+async def seed_admin():
+    email = os.environ.get("ADMIN_EMAIL", "admin@bennouri.com").lower()
+    password = os.environ.get("ADMIN_PASSWORD", "Admin@123")
+    existing = await db.users.find_one({"email": email})
+    if not existing:
+        await db.users.insert_one({
+            "id": str(uuid.uuid4()),
+            "name": "Admin BENNOURI",
+            "email": email,
+            "password_hash": hash_password(password),
+            "phone": "+216 71 123 456",
+            "address": "Avenue Habib Bourguiba, Tunis",
+            "role": "admin",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        logging.info(f"Admin seeded: {email}")
+    elif not verify_password(password, existing["password_hash"]):
+        await db.users.update_one(
+            {"email": email},
+            {"$set": {"password_hash": hash_password(password), "role": "admin"}},
+        )
 
-# Include the router in the main app
-app.include_router(api_router)
+
+@app.on_event("startup")
+async def on_startup():
+    await db.users.create_index("email", unique=True)
+    await db.users.create_index("id")
+    await db.orders.create_index("user_id")
+    await db.orders.create_index("id")
+    await seed_admin()
+
+
+app.include_router(api)
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
 
 @app.on_event("shutdown")
-async def shutdown_db_client():
+async def shutdown():
     client.close()

@@ -1,0 +1,209 @@
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { ArrowRight, Search, Truck, Shield, Award, ChevronRight, Hash, Zap, Wrench, CarFront } from "lucide-react";
+import { toast } from "sonner";
+import { api, formatApiError } from "@/lib/api";
+import { useCart } from "@/context/CartContext";
+
+const HERO_IMG =
+  "https://images.pexels.com/photos/10905352/pexels-photo-10905352.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1600";
+
+const BRAND_LOGOS = [
+  { name: "Volkswagen", img: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=300&h=200&fit=crop" },
+  { name: "Mercedes-Benz", img: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=300&h=200&fit=crop" },
+  { name: "Audi", img: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=300&h=200&fit=crop" },
+  { name: "BMW", img: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=300&h=200&fit=crop" },
+  { name: "Peugeot", img: "https://images.unsplash.com/photo-1542362567-b07e54358753?w=300&h=200&fit=crop" },
+  { name: "Renault", img: "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=300&h=200&fit=crop" },
+];
+
+export default function LandingPage() {
+  const [vin, setVin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { setVehicle } = useCart();
+
+  const handleVin = async (e) => {
+    e.preventDefault();
+    const v = vin.trim().toUpperCase();
+    if (v.length < 11) {
+      toast.error("Le VIN doit contenir au moins 11 caractères");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data } = await api.post("/vin/decode", { vin: v });
+      setVehicle(data);
+      navigate(`/vehicule/${data.vin}`);
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div data-testid="landing-page">
+      {/* Hero */}
+      <section className="relative bn-grid-overlay overflow-hidden" style={{ backgroundImage: `url(${HERO_IMG})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-white bn-fade-up">
+              <div className="bn-chip bg-red-600/20 text-red-300 border-red-600/30 mb-6" data-testid="hero-chip">
+                <Hash className="w-3 h-3" /> Identification 100% précise par VIN
+              </div>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight">
+                La bonne pièce, <br />
+                <span className="text-red-500">à coup sûr.</span>
+              </h1>
+              <p className="mt-6 text-lg text-slate-200 max-w-xl leading-relaxed">
+                Entrez votre numéro de châssis (VIN) et accédez instantanément à l'ensemble du catalogue de pièces compatibles avec votre véhicule — Mécanique, Électrique et Carrosserie.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-6 text-sm">
+                <span className="inline-flex items-center gap-2"><Truck className="w-4 h-4 text-red-500" /> Livraison Tunisie</span>
+                <span className="inline-flex items-center gap-2"><Shield className="w-4 h-4 text-red-500" /> Qualité garantie</span>
+                <span className="inline-flex items-center gap-2"><Award className="w-4 h-4 text-red-500" /> Marques premium</span>
+              </div>
+            </div>
+
+            {/* VIN form card */}
+            <form
+              onSubmit={handleVin}
+              className="bg-white rounded-sm shadow-2xl p-8 border-t-4 border-red-600 bn-fade-up"
+              data-testid="vin-search-form"
+            >
+              <h2 className="font-display font-bold text-2xl text-slate-900">Trouvez vos pièces</h2>
+              <p className="text-sm text-slate-500 mt-1">Entrez votre numéro VIN (17 caractères en général)</p>
+
+              <label className="block mt-6 text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Numéro VIN
+              </label>
+              <div className="relative mt-2">
+                <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  value={vin}
+                  onChange={(e) => setVin(e.target.value.toUpperCase())}
+                  placeholder="WVWZZZ1KZ8W123456"
+                  maxLength={17}
+                  className="w-full pl-12 pr-4 py-4 text-lg font-mono-vin uppercase border-2 border-slate-300 rounded-sm focus:border-red-600 focus:ring-1 focus:ring-red-600 outline-none transition-colors"
+                  data-testid="landing-vin-input"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-6 w-full bn-btn-primary text-lg py-4 disabled:opacity-60 disabled:cursor-not-allowed"
+                data-testid="landing-vin-submit"
+              >
+                {loading ? "Identification..." : (<>Valider <ArrowRight className="w-5 h-5" /></>)}
+              </button>
+
+              <div className="mt-5 pt-5 border-t border-slate-200 text-xs text-slate-500 flex items-start gap-2">
+                <Search className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>Le VIN se trouve sur la carte grise (champ E) ou gravé sur le châssis. Exemple test : <button type="button" onClick={() => setVin("WVWZZZ1KZ8W123456")} className="font-mono-vin text-slate-700 hover:text-red-600 underline" data-testid="vin-example-btn">WVWZZZ1KZ8W123456</button></span>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Sections cards */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Catalogue</div>
+            <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">Trois familles, des milliers de pièces</h2>
+          </div>
+          <Link to="/catalogue/mecanique" className="hidden md:inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-red-600">
+            Tout voir <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 bn-stagger">
+          {[
+            { slug: "mecanique", label: "Mécanique", desc: "Moteur, boîte, freinage, suspension, direction.", icon: Wrench, img: "https://images.unsplash.com/photo-1632733711450-c0c08aacaaca?w=800&h=600&fit=crop" },
+            { slug: "electrique", label: "Électrique", desc: "Batterie, démarrage, éclairage, faisceaux.", icon: Zap, img: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop" },
+            { slug: "carrosserie", label: "Carrosserie", desc: "Pare-chocs, ailes, capots, vitres, rétros.", icon: CarFront, img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop" },
+          ].map((c) => (
+            <Link
+              key={c.slug}
+              to={`/catalogue/${c.slug}`}
+              className="group relative overflow-hidden rounded-sm border border-slate-200 bg-white hover:border-slate-400 transition-all"
+              data-testid={`section-card-${c.slug}`}
+            >
+              <div className="relative h-52 overflow-hidden bg-slate-100">
+                <img src={c.img} alt={c.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent" />
+                <c.icon className="absolute top-4 right-4 w-9 h-9 text-white bg-red-600 p-1.5 rounded-sm" />
+              </div>
+              <div className="p-6">
+                <h3 className="font-display font-bold text-xl text-slate-900 mb-2">{c.label}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{c.desc}</p>
+                <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-red-600 group-hover:gap-2 transition-all">
+                  Découvrir <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Brands */}
+      <section className="bg-white border-y border-slate-200 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Compatibilité</div>
+            <h2 className="font-display font-bold text-3xl text-slate-900">Toutes les grandes marques</h2>
+            <p className="text-slate-500 mt-2">Volkswagen, Mercedes, Audi, BMW, Peugeot, Renault et bien plus.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {BRAND_LOGOS.map((b) => (
+              <div key={b.name} className="bn-card aspect-[3/2] flex items-center justify-center text-center p-4">
+                <div>
+                  <div className="font-display font-bold text-slate-800 text-base">{b.name}</div>
+                  <div className="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Compatible</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA strip */}
+      <section className="bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-500 mb-3">Pourquoi BENNOURI ?</div>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold leading-tight">Le bon mécanicien commence avec la bonne pièce.</h2>
+            <p className="mt-4 text-slate-300 leading-relaxed max-w-xl">
+              Plus de fausses commandes, plus de pièces incompatibles. Notre système VIN garantit la pièce exacte pour votre véhicule — du joint de culasse au phare arrière.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link to="/recherche-vin" className="bn-btn-primary" data-testid="cta-vin-search">
+                Rechercher par VIN <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/catalogue/mecanique" className="bn-btn-outline border-slate-600 text-white hover:bg-slate-800" data-testid="cta-browse-catalog">
+                Parcourir le catalogue
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { v: "10k+", l: "Références" },
+              { v: "48h", l: "Livraison max" },
+              { v: "200+", l: "Marques" },
+              { v: "98%", l: "Clients satisfaits" },
+            ].map((s, i) => (
+              <div key={i} className="border border-slate-700 p-6 rounded-sm bg-slate-800/50">
+                <div className="font-display text-4xl font-bold text-red-500">{s.v}</div>
+                <div className="text-sm text-slate-400 mt-1 uppercase tracking-wider">{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
