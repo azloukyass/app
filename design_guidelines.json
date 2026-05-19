@@ -1,0 +1,114 @@
+{
+  "theme": "light",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "vibe": "Professional, Industrial, Trustworthy, Efficient",
+  "domain": "E-commerce (Automotive Parts)",
+  "language": "fr",
+  "colors": {
+    "primary": "#0F172A",
+    "primary_description": "Navy/Slate - Used for main branding, navigation background, primary headings.",
+    "secondary": "#64748B",
+    "secondary_description": "Steel/Silver - Used for subheadings, borders, metallic/industrial accents.",
+    "accent": "#DC2626",
+    "accent_description": "Action Red - Used for CTAs, 'Valider' buttons, urgent notifications.",
+    "background": "#F8FAFC",
+    "surface": "#FFFFFF",
+    "text": {
+      "main": "#0F172A",
+      "muted": "#475569"
+    },
+    "status": {
+      "success": "#16A34A",
+      "warning": "#F59E0B",
+      "error": "#EF4444"
+    }
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Outfit, sans-serif",
+      "body": "IBM Plex Sans, sans-serif"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl font-bold tracking-tight text-slate-900",
+      "h2": "text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900",
+      "h3": "text-xl font-semibold text-slate-800",
+      "body": "text-base leading-relaxed text-slate-600",
+      "small": "text-sm text-slate-500",
+      "button": "text-base font-medium tracking-wide"
+    }
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "Tailwind default (p-4, p-6, p-8, p-12)",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "border_radius": "rounded-sm (2px to 4px) to maintain a mechanical, sharp, industrial feel. Avoid heavily rounded corners.",
+    "shadows": "Minimal drop shadows. Prefer 1px solid borders (border-slate-200) to separate cards. Use shadow-sm on hover."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-red-600 hover:bg-red-700 text-white rounded-sm px-6 py-3 transition-colors",
+      "secondary": "bg-slate-800 hover:bg-slate-900 text-white rounded-sm px-6 py-3 transition-colors",
+      "outline": "border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-sm px-6 py-3 transition-colors"
+    },
+    "cards": {
+      "category_card": "bg-white border border-slate-200 rounded-sm p-6 flex flex-col items-center justify-center hover:border-slate-400 hover:shadow-md transition-all cursor-pointer group",
+      "product_card": "bg-white border border-slate-200 rounded-sm p-4 flex flex-col"
+    },
+    "inputs": {
+      "vin_search": "w-full text-lg border-2 border-slate-300 rounded-sm px-4 py-4 uppercase tracking-widest focus:border-red-600 focus:ring-1 focus:ring-red-600 outline-none"
+    },
+    "badges": {
+      "breadcrumb": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800"
+    }
+  },
+  "pages_and_flows": {
+    "landing": {
+      "hero": "High contrast hero. Large background image with a dark/navy overlay (bg-slate-900/70) to ensure readability. Center or left-aligned VIN search form.",
+      "vin_search_block": "White surface block floating over the hero. Contains heading 'Trouvez vos pièces auto', large input field for VIN, and a prominent 'Valider' (Red) button.",
+      "trust_signals": "Showcase car brands (VW, Audi, Mercedes) and delivery/payment promises below the hero."
+    },
+    "vehicle_details": {
+      "breadcrumb_header": "A top bar showing parsed VIN data: [Model Name] / [Fuel Type] / [Electric/Thermique] / [VIN]. Styled as technical badges.",
+      "category_selection": "3 main cards presented side-by-side: Mécanique, Électrique, Carrosserie. Each card should have a high-quality icon or realistic image representing the category."
+    },
+    "parts_listing": {
+      "grid": "CSS Grid layout. Sidebar for filtering, main area for parts grid.",
+      "part_card": "Image, Name, Reference Number, Price, and 'Ajouter au panier' CTA."
+    },
+    "admin_dashboard": {
+      "layout": "Sidebar navigation + main content area. High density data tables for Users and Orders. Striped rows, compact padding."
+    },
+    "footer": {
+      "layout": "Dark navy background (bg-slate-900). Columns for 'À propos' (address, phone, email), 'Liens rapides', and 'Paiement'. Include Visa/Mastercard SVG logos."
+    }
+  },
+  "media": {
+    "images": {
+      "logo": {
+        "url": "https://customer-assets.emergentagent.com/job_5600b1e5-a62c-421b-898c-63f49ca272d0/artifacts/ewc8z695_logo.jpeg",
+        "description": "BENNOURI Pièces Auto Logo. Use in Header and Footer."
+      },
+      "hero_background": {
+        "url": "https://images.pexels.com/photos/10905352/pexels-photo-10905352.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Sleek dark modern car front. Use as the hero background with an overlay."
+      },
+      "mechanic_working": {
+        "url": "https://images.pexels.com/photos/8478232/pexels-photo-8478232.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Mechanic working on engine. Useful for 'About Us' or 'Services' sections."
+      },
+      "brands_showcase": {
+        "url": "https://images.pexels.com/photos/12764902/pexels-photo-12764902.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Audi and Mercedes side by side. Use to illustrate compatible premium car brands."
+      },
+      "category_mecanique": {
+        "url": "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwzfHxjYXIlMjBlbmdpbmUlMjBtZWNoYW5pY3xlbnwwfHx8fDE3NzkxODE4Mzl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Engine parts representation for 'Mécanique' category."
+      },
+      "category_carrosserie": {
+        "url": "https://images.pexels.com/photos/11157437/pexels-photo-11157437.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Disassembled car body parts for 'Carrosserie' category."
+      }
+    },
+    "icons_strategy": "Use Lucide React (lucide-react) for general UI icons (cart, user, search). For the 3 main categories, use highly detailed SVGs or the provided realistic images."
+  },
+  "testing_attributes": "All interactive and key informational elements MUST include a `data-testid` attribute (e.g., data-testid='vin-submit-button')."
+}
