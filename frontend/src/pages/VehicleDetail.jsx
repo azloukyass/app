@@ -6,9 +6,9 @@ import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 
 const SECTIONS = [
-  { slug: "mecanique", label: "Mécanique", desc: "Moteur, transmission, freinage, suspension", Icon: Wrench, color: "from-red-600 to-red-700", img: "https://images.unsplash.com/photo-1632733711450-c0c08aacaaca?w=900&h=600&fit=crop" },
-  { slug: "electrique", label: "Électrique", desc: "Batterie, démarrage, éclairage, faisceaux", Icon: Zap, color: "from-amber-500 to-amber-600", img: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=900&h=600&fit=crop" },
-  { slug: "carrosserie", label: "Carrosserie", desc: "Pare-chocs, ailes, capots, vitres, rétros", Icon: CarFront, color: "from-slate-700 to-slate-900", img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&h=600&fit=crop" },
+  { slug: "mecanique", label: "Mécanique", desc: "Moteur, transmission, freinage, suspension", Icon: Wrench, color: "from-red-600 to-red-700", img: "https://images.pexels.com/photos/4489732/pexels-photo-4489732.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
+  { slug: "electrique", label: "Électrique", desc: "Batterie, démarrage, éclairage, faisceaux", Icon: Zap, color: "from-amber-500 to-amber-600", img: "https://images.pexels.com/photos/2127733/pexels-photo-2127733.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
+  { slug: "carrosserie", label: "Carrosserie", desc: "Pare-chocs, ailes, capots, vitres, rétros", Icon: CarFront, color: "from-slate-700 to-slate-900", img: "https://images.pexels.com/photos/1638459/pexels-photo-1638459.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
 ];
 
 export default function VehicleDetail() {

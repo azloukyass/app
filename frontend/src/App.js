@@ -17,6 +17,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Account from "@/pages/Account";
 import AdminDashboard from "@/pages/AdminDashboard";
+import SearchResults from "@/pages/SearchResults";
 import NotFound from "@/pages/NotFound";
 
 function Layout({ children }) {
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="/vehicule/:vin" element={<VehicleDetail />} />
               <Route path="/catalogue/:section" element={<PartsCategory />} />
               <Route path="/catalogue/:section/:category" element={<PartsList />} />
+              <Route path="/recherche" element={<SearchResults />} />
               <Route path="/panier" element={<Cart />} />
               <Route path="/connexion" element={<Login />} />
               <Route path="/inscription" element={<Register />} />

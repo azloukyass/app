@@ -227,6 +227,32 @@ async def get_category_api(section: str, category: str):
     return cat
 
 
+@api.get("/catalog-search")
+async def search_parts(q: str = ""):
+    query = (q or "").strip().lower()
+    if not query:
+        return []
+    results = []
+    for section_slug, section in CATALOG.items():
+        for cat in section["categories"]:
+            for part in cat["parts"]:
+                if (
+                    query in part["ref"].lower()
+                    or query in part["name"].lower()
+                    or query in part["brand"].lower()
+                ):
+                    results.append({
+                        **part,
+                        "section": section_slug,
+                        "section_label": section["label"],
+                        "category": cat["slug"],
+                        "category_label": cat["label"],
+                    })
+                if len(results) >= 60:
+                    return results
+    return results
+
+
 _VIN_FALLBACK = {
     "WVWZZZ1KZ8W123456": {"make": "Volkswagen", "model": "Golf 5", "year": "2008", "fuel": "Essence", "engine": "1.6 FSI", "trim": "Trendline"},
     "WAUZZZ8K9CA123456": {"make": "Audi", "model": "A4 B8", "year": "2012", "fuel": "Diesel", "engine": "2.0 TDI", "trim": "Avant"},

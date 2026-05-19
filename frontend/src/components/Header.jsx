@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { ShoppingCart, User, LogOut, Shield, Menu, X } from "lucide-react";
+import { ShoppingCart, User, LogOut, Shield, Menu, X, Search } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
@@ -12,6 +12,15 @@ export default function Header() {
   const { count } = useCart();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+
+  const submitSearch = (e) => {
+    e.preventDefault();
+    const v = q.trim();
+    if (!v) return;
+    navigate(`/recherche?q=${encodeURIComponent(v)}`);
+    setOpen(false);
+  };
 
   const navLink = (active) =>
     `text-sm font-medium tracking-wide transition-colors ${
@@ -41,9 +50,6 @@ export default function Header() {
             <NavLink to="/recherche-vin" className={({ isActive }) => navLink(isActive)} data-testid="nav-vin">
               Recherche VIN
             </NavLink>
-            <NavLink to="/catalogue/mecanique" className={({ isActive }) => navLink(isActive)} data-testid="nav-catalogue">
-              Catalogue
-            </NavLink>
             {user && user.role === "admin" && (
               <NavLink to="/admin" className={({ isActive }) => navLink(isActive)} data-testid="nav-admin">
                 <span className="inline-flex items-center gap-1">
@@ -52,6 +58,21 @@ export default function Header() {
               </NavLink>
             )}
           </nav>
+
+          {/* Search input */}
+          <form onSubmit={submitSearch} className="hidden lg:block flex-1 max-w-md mx-6" data-testid="header-search-form">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Rechercher par référence, nom, marque…"
+                className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-sm focus:border-red-600 focus:ring-1 focus:ring-red-600 outline-none transition-colors bg-slate-50 focus:bg-white"
+                data-testid="header-search-input"
+              />
+            </div>
+          </form>
 
           <div className="flex items-center gap-3">
             <button
@@ -97,9 +118,21 @@ export default function Header() {
 
         {open && (
           <div className="md:hidden border-t border-slate-200 py-4 space-y-2">
+            <form onSubmit={submitSearch} className="px-1 pb-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Rechercher une pièce…"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-slate-50"
+                  data-testid="header-mobile-search-input"
+                />
+              </div>
+            </form>
             <Link to="/" onClick={() => setOpen(false)} className="block px-3 py-2 hover:bg-slate-100 rounded-sm">Accueil</Link>
             <Link to="/recherche-vin" onClick={() => setOpen(false)} className="block px-3 py-2 hover:bg-slate-100 rounded-sm">Recherche VIN</Link>
-            <Link to="/catalogue/mecanique" onClick={() => setOpen(false)} className="block px-3 py-2 hover:bg-slate-100 rounded-sm">Catalogue</Link>
             {user && user.role === "admin" && (
               <Link to="/admin" onClick={() => setOpen(false)} className="block px-3 py-2 hover:bg-slate-100 rounded-sm">Admin</Link>
             )}

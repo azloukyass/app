@@ -8,13 +8,27 @@ import { useCart } from "@/context/CartContext";
 const HERO_IMG =
   "https://images.pexels.com/photos/10905352/pexels-photo-10905352.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1600";
 
+const MercedesStar = () => (
+  <svg viewBox="-50 -50 100 100" className="max-h-10 max-w-[70%]" fill="none" stroke="#0f172a" strokeWidth="6">
+    <circle r="44" />
+    <path d="M0 -38 L0 0 L-33 19 Z M0 0 L33 19 L0 -38 Z" fill="#0f172a" stroke="none" />
+    <path d="M0 0 L-33 19 L33 19 Z" fill="#0f172a" stroke="none" opacity="0.65" />
+  </svg>
+);
+
 const BRAND_LOGOS = [
-  { name: "Volkswagen", img: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=300&h=200&fit=crop" },
-  { name: "Mercedes-Benz", img: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=300&h=200&fit=crop" },
-  { name: "Audi", img: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=300&h=200&fit=crop" },
-  { name: "BMW", img: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=300&h=200&fit=crop" },
-  { name: "Peugeot", img: "https://images.unsplash.com/photo-1542362567-b07e54358753?w=300&h=200&fit=crop" },
-  { name: "Renault", img: "https://images.unsplash.com/photo-1502877338535-766e1452684a?w=300&h=200&fit=crop" },
+  { name: "Volkswagen", slug: "volkswagen" },
+  { name: "Mercedes-Benz", slug: "mercedes", custom: <MercedesStar /> },
+  { name: "Audi", slug: "audi" },
+  { name: "BMW", slug: "bmw" },
+  { name: "Peugeot", slug: "peugeot" },
+  { name: "Renault", slug: "renault" },
+  { name: "Citroën", slug: "citroen" },
+  { name: "Toyota", slug: "toyota" },
+  { name: "Hyundai", slug: "hyundai" },
+  { name: "Kia", slug: "kia" },
+  { name: "Dacia", slug: "dacia" },
+  { name: "Ford", slug: "ford" },
 ];
 
 export default function LandingPage() {
@@ -116,16 +130,13 @@ export default function LandingPage() {
             <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Catalogue</div>
             <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">Trois familles, des milliers de pièces</h2>
           </div>
-          <Link to="/catalogue/mecanique" className="hidden md:inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-red-600">
-            Tout voir <ChevronRight className="w-4 h-4" />
-          </Link>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 bn-stagger">
           {[
-            { slug: "mecanique", label: "Mécanique", desc: "Moteur, boîte, freinage, suspension, direction.", icon: Wrench, img: "https://images.unsplash.com/photo-1632733711450-c0c08aacaaca?w=800&h=600&fit=crop" },
-            { slug: "electrique", label: "Électrique", desc: "Batterie, démarrage, éclairage, faisceaux.", icon: Zap, img: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop" },
-            { slug: "carrosserie", label: "Carrosserie", desc: "Pare-chocs, ailes, capots, vitres, rétros.", icon: CarFront, img: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop" },
+            { slug: "mecanique", label: "Mécanique", desc: "Moteur, boîte, freinage, suspension, direction.", icon: Wrench, img: "https://images.pexels.com/photos/4489732/pexels-photo-4489732.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
+            { slug: "electrique", label: "Électrique", desc: "Batterie, démarrage, éclairage, faisceaux.", icon: Zap, img: "https://images.pexels.com/photos/2127733/pexels-photo-2127733.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
+            { slug: "carrosserie", label: "Carrosserie", desc: "Pare-chocs, ailes, capots, vitres, rétros.", icon: CarFront, img: "https://images.pexels.com/photos/1638459/pexels-photo-1638459.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
           ].map((c) => (
             <Link
               key={c.slug}
@@ -158,13 +169,19 @@ export default function LandingPage() {
             <h2 className="font-display font-bold text-3xl text-slate-900">Toutes les grandes marques</h2>
             <p className="text-slate-500 mt-2">Volkswagen, Mercedes, Audi, BMW, Peugeot, Renault et bien plus.</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
             {BRAND_LOGOS.map((b) => (
-              <div key={b.name} className="bn-card aspect-[3/2] flex items-center justify-center text-center p-4">
-                <div>
-                  <div className="font-display font-bold text-slate-800 text-base">{b.name}</div>
-                  <div className="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Compatible</div>
-                </div>
+              <div key={b.name} className="bn-card aspect-[3/2] flex flex-col items-center justify-center text-center p-4 group" data-testid={`brand-${b.slug}`}>
+                {b.custom ? b.custom : (
+                  <img
+                    src={`https://cdn.simpleicons.org/${b.slug}/0f172a`}
+                    alt={b.name}
+                    className="max-h-10 max-w-[70%] object-contain opacity-85 group-hover:opacity-100 transition-opacity duration-300"
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                )}
+                <div className="text-[10px] uppercase tracking-widest text-slate-500 mt-3 font-semibold">{b.name}</div>
               </div>
             ))}
           </div>
@@ -183,9 +200,6 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-wrap gap-4">
               <Link to="/recherche-vin" className="bn-btn-primary" data-testid="cta-vin-search">
                 Rechercher par VIN <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link to="/catalogue/mecanique" className="bn-btn-outline border-slate-600 text-white hover:bg-slate-800" data-testid="cta-browse-catalog">
-                Parcourir le catalogue
               </Link>
             </div>
           </div>
