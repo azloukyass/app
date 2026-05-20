@@ -70,7 +70,7 @@ export default function LandingPage() {
                 La bonne pièce, <br />
                 <span className="text-red-500">à coup sûr.</span>
               </h1>
-              <p className="mt-6 text-lg text-slate-200 max-w-xl leading-relaxed">
+              <p className="mt-6 text-lg text-slate-200 font-extrabold max-w-xl leading-relaxed">
                 Entrez votre numéro de châssis (VIN) et accédez instantanément à l'ensemble du catalogue de pièces compatibles avec votre véhicule — Mécanique, Électrique et Carrosserie.
               </p>
               <div className="mt-8 flex flex-wrap gap-6 text-sm">

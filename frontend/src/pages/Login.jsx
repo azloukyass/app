@@ -35,7 +35,7 @@ export default function Login() {
       </div>
 
       <form onSubmit={submit} className="bg-white border border-slate-200 rounded-sm p-8 shadow-sm">
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Email</label>
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Email</label>#
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input

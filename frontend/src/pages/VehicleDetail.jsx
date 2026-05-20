@@ -48,14 +48,11 @@ export default function VehicleDetail() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wider mb-4" data-testid="vehicle-breadcrumb">
+            <span className="text-slate-300 mt-2 font-bold">Détails de votre modèle:</span>
             <span className="bn-chip bg-white/10 text-white border-white/20"><Car className="w-3 h-3" /> {vehicle.make}</span>
-            <span className="text-slate-500">/</span>
             <span className="bn-chip bg-white/10 text-white border-white/20">{vehicle.model}</span>
-            <span className="text-slate-500">/</span>
             <span className="bn-chip bg-white/10 text-white border-white/20"><Calendar className="w-3 h-3" /> {vehicle.year || "—"}</span>
-            <span className="text-slate-500">/</span>
             <span className="bn-chip bg-white/10 text-white border-white/20"><Fuel className="w-3 h-3" /> {vehicle.fuel}</span>
-            <span className="text-slate-500">/</span>
             <span className="bn-chip bg-red-600/30 text-red-200 border-red-500/40 font-mono-vin"><Hash className="w-3 h-3" /> {vehicle.vin}</span>
           </div>
 

@@ -75,11 +75,15 @@ export default function Footer() {
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-3">
               <MapPin className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0" />
-              <span>Avenue Habib Bourguiba, Tunis 1001, Tunisie</span>
+              <span>Rue de France, 2043 Ben Arous, Tunisie</span>
             </li>
             <li className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <a href="tel:+21671123456" className="hover:text-white">+216 71 123 456</a>
+              <a href="tel:+21671123456" className="hover:text-white">+216 50 881 000</a>
+            </li>
+             <li className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-red-500 flex-shrink-0" />
+              <a href="tel:+21671123456" className="hover:text-white">+216 54 643 643</a>
             </li>
             <li className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-red-500 flex-shrink-0" />
