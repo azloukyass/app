@@ -10,6 +10,7 @@ export default function Cart() {
   const { items, updateQty, remove, clear, total, vehicle } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [name, setName] = useState(user?.name || "");
   const [address, setAddress] = useState(user?.address || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [notes, setNotes] = useState("");
@@ -26,8 +27,8 @@ export default function Cart() {
       toast.error("Votre panier est vide");
       return;
     }
-    if (!address.trim() || !phone.trim()) {
-      toast.error("Adresse et téléphone obligatoires");
+    if (!name.trim() || !address.trim() || !phone.trim()) {
+      toast.error("Nom, adresse et téléphone obligatoires");
       return;
     }
     setSubmitting(true);
@@ -36,6 +37,7 @@ export default function Cart() {
         items: items.map((i) => ({ ref: i.ref, quantity: i.quantity })),
         vehicle_vin: vehicle?.vin || "",
         vehicle_label: vehicle ? `${vehicle.make} ${vehicle.model}` : "",
+        customer_name: name,
         shipping_address: address,
         phone,
         notes,
@@ -121,6 +123,17 @@ export default function Cart() {
             </div>
 
             <div className="mt-6 space-y-3">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Nom complet</label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-sm focus:border-red-600 outline-none text-sm"
+                  placeholder="Votre nom et prénom"
+                  data-testid="cart-name-input"
+                  required
+                />
+              </div>
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Téléphone</label>
                 <input

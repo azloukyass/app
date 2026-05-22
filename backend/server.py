@@ -19,6 +19,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 
 from catalog_data import CATALOG, get_section, get_category, find_part
+from vehicles_catalog import get_catalog as get_vehicles_catalog, VEHICLES
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -79,6 +80,7 @@ class OrderIn(BaseModel):
     items: List[CartItem]
     vehicle_vin: Optional[str] = ""
     vehicle_label: Optional[str] = ""
+    customer_name: Optional[str] = ""
     shipping_address: str
     phone: str
     notes: Optional[str] = ""
@@ -283,33 +285,81 @@ async def decode_vin(payload: VinIn):
         raise HTTPException(400, "Le numéro VIN doit contenir entre 11 et 17 caractères")
 
     info = None
-    try:
-        async with httpx.AsyncClient(timeout=8.0) as cl:
-            r = await cl.get(
-                f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
-            )
-            if r.status_code == 200:
-                data = r.json().get("Results", [{}])[0]
-                make = (data.get("Make") or "").strip()
-                model = (data.get("Model") or "").strip()
-                year = (data.get("ModelYear") or "").strip()
-                fuel = (data.get("FuelTypePrimary") or "").strip() or "Essence"
-                engine = (data.get("EngineModel") or data.get("DisplacementL") or "").strip()
-                if make and model:
-                    info = {
-                        "make": make.title(),
-                        "model": model,
-                        "year": year,
-                        "fuel": _translate_fuel(fuel),
-                        "engine": engine or "—",
-                        "trim": (data.get("Trim") or "—"),
-                    }
-    except Exception as e:
-        logging.warning(f"NHTSA fail: {e}")
 
+    # 1. Try AutoDev API (paid, global coverage)
+    autodev_key = os.environ.get("AUTODEV_API_KEY")
+    if autodev_key:
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as cl:
+                r = await cl.get(f"https://auto.dev/api/vin/{vin}?apikey={autodev_key}")
+                if r.status_code == 200:
+                    d = r.json()
+                    if d.get("status") != "NOT_FOUND":
+                        make = (d.get("make") or {}).get("name", "") if isinstance(d.get("make"), dict) else ""
+                        model = (d.get("model") or {}).get("name", "") if isinstance(d.get("model"), dict) else ""
+                        years_list = d.get("years") or []
+                        year = ""
+                        engine_name = ""
+                        trim = ""
+                        if years_list:
+                            year_obj = years_list[0]
+                            year = str(year_obj.get("year") or "")
+                            styles = year_obj.get("styles") or []
+                            if styles:
+                                engine_name = styles[0].get("name") or ""
+                                trim = styles[0].get("trim") or ""
+                        fuel = "Essence"
+                        engine_obj = d.get("engine") or {}
+                        if isinstance(engine_obj, dict):
+                            ft = engine_obj.get("fuelType") or engine_obj.get("type") or ""
+                            fuel = _translate_fuel(ft) if ft else "Essence"
+                        if make and model:
+                            info = {
+                                "make": make,
+                                "model": model,
+                                "year": year,
+                                "fuel": fuel,
+                                "engine": engine_name or "—",
+                                "trim": trim or "—",
+                                "source": "autodev",
+                            }
+        except Exception as e:
+            logging.warning(f"AutoDev fail: {e}")
+
+    # 2. Fallback to NHTSA (free US-centric)
+    if not info:
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as cl:
+                r = await cl.get(
+                    f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
+                )
+                if r.status_code == 200:
+                    data = r.json().get("Results", [{}])[0]
+                    make = (data.get("Make") or "").strip()
+                    model = (data.get("Model") or "").strip()
+                    year = (data.get("ModelYear") or "").strip()
+                    fuel = (data.get("FuelTypePrimary") or "").strip() or "Essence"
+                    engine = (data.get("EngineModel") or data.get("DisplacementL") or "").strip()
+                    if make and model:
+                        info = {
+                            "make": make.title(),
+                            "model": model,
+                            "year": year,
+                            "fuel": _translate_fuel(fuel),
+                            "engine": engine or "—",
+                            "trim": (data.get("Trim") or "—"),
+                            "source": "nhtsa",
+                        }
+        except Exception as e:
+            logging.warning(f"NHTSA fail: {e}")
+
+    # 3. Static fallback
     if not info:
         info = _VIN_FALLBACK.get(vin)
+        if info:
+            info["source"] = "fallback"
 
+    # 4. WMI-based guess
     if not info:
         wmi = vin[:3]
         guess = {
@@ -326,17 +376,49 @@ async def decode_vin(payload: VinIn):
         }.get(wmi)
         if guess:
             info = {
-                "make": guess[0],
-                "model": guess[1],
-                "year": "2015",
-                "fuel": guess[2],
-                "engine": "—",
-                "trim": "—",
+                "make": guess[0], "model": guess[1], "year": "2015",
+                "fuel": guess[2], "engine": "—", "trim": "—", "source": "wmi-guess",
             }
         else:
             raise HTTPException(404, "Impossible d'identifier ce VIN. Vérifiez le numéro et réessayez.")
 
     return {"vin": vin, **info}
+
+
+class ManualVehicleIn(BaseModel):
+    make: str
+    model: str
+    year: str
+    fuel: str
+
+
+@api.get("/vehicles/catalog")
+async def vehicles_catalog():
+    return get_vehicles_catalog()
+
+
+@api.post("/vehicles/manual")
+async def vehicles_manual(payload: ManualVehicleIn):
+    make = payload.make.strip()
+    model = payload.model.strip()
+    year = payload.year.strip()
+    fuel = payload.fuel.strip()
+    if not (make and model and year and fuel):
+        raise HTTPException(400, "Tous les champs sont obligatoires")
+    if make not in VEHICLES:
+        raise HTTPException(400, f"Marque inconnue: {make}")
+    # Synthetic ID used as URL slug
+    slug = f"MAN-{make[:3].upper()}-{model.replace(' ', '').upper()[:8]}-{year}"
+    return {
+        "vin": slug,
+        "make": make,
+        "model": model,
+        "year": year,
+        "fuel": fuel,
+        "engine": "—",
+        "trim": "—",
+        "source": "manual",
+    }
 
 
 @api.post("/orders")
@@ -365,6 +447,7 @@ async def create_order(data: OrderIn, user: dict = Depends(get_current_user)):
         "user_id": user["id"],
         "user_email": user["email"],
         "user_name": user["name"],
+        "customer_name": (data.customer_name or user["name"]).strip(),
         "items": items_resolved,
         "total_tnd": round(total, 3),
         "vehicle_vin": data.vehicle_vin or "",

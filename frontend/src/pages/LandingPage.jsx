@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { ArrowRight, Search, Truck, Shield, Award, ChevronRight, Hash, Zap, Wrench, CarFront } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, Search, Truck, Shield, Award, ChevronRight, Hash, Zap, Wrench, CarFront, Filter, ListOrdered, ShoppingCart, Package, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
@@ -36,6 +36,49 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setVehicle } = useCart();
+
+  // Reset VIN input when landing page mounts (fixes back-navigation bug)
+  useEffect(() => {
+    setVin("");
+  }, []);
+
+  // Manual filter state
+  const [catalog, setCatalog] = useState(null);
+  const [fMake, setFMake] = useState("");
+  const [fModel, setFModel] = useState("");
+  const [fYear, setFYear] = useState("");
+  const [fFuel, setFFuel] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
+
+  useEffect(() => {
+    api.get("/vehicles/catalog").then((r) => setCatalog(r.data)).catch(() => {});
+  }, []);
+
+  const brands = catalog?.brands || [];
+  const brandData = (fMake && catalog?.data?.[fMake]) || null;
+  const models = brandData?.models || [];
+  const years = brandData?.years || [];
+  const fuels = brandData?.fuels || [];
+
+  const handleManual = async (e) => {
+    e.preventDefault();
+    if (!fMake || !fModel || !fYear || !fFuel) {
+      toast.error("Sélectionnez tous les champs");
+      return;
+    }
+    setManualLoading(true);
+    try {
+      const { data } = await api.post("/vehicles/manual", {
+        make: fMake, model: fModel, year: fYear, fuel: fFuel,
+      });
+      setVehicle(data);
+      navigate(`/vehicule/${data.vin}`);
+    } catch (err) {
+      toast.error(formatApiError(err));
+    } finally {
+      setManualLoading(false);
+    }
+  };
 
   const handleVin = async (e) => {
     e.preventDefault();
@@ -123,6 +166,81 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Manual vehicle filter */}
+      <section className="bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <div className="text-center mb-8">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2 inline-flex items-center gap-2 justify-center"><Filter className="w-3.5 h-3.5" /> Sans VIN ?</div>
+            <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">Trouvez des pièces pour votre véhicule</h2>
+            <p className="text-slate-500 mt-2 max-w-2xl mx-auto">Sélectionnez votre marque, modèle, année et type de carburant.</p>
+          </div>
+
+          <form onSubmit={handleManual} className="bg-white border border-slate-200 rounded-sm p-6 sm:p-8 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="manual-filter-form">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Marque</label>
+              <select
+                value={fMake}
+                onChange={(e) => { setFMake(e.target.value); setFModel(""); setFYear(""); setFFuel(""); }}
+                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm"
+                data-testid="filter-make"
+              >
+                <option value="">— Choisir —</option>
+                {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Modèle</label>
+              <select
+                value={fModel}
+                onChange={(e) => setFModel(e.target.value)}
+                disabled={!fMake}
+                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm disabled:bg-slate-100 disabled:text-slate-400"
+                data-testid="filter-model"
+              >
+                <option value="">— Choisir —</option>
+                {models.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Année</label>
+              <select
+                value={fYear}
+                onChange={(e) => setFYear(e.target.value)}
+                disabled={!fMake}
+                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm disabled:bg-slate-100 disabled:text-slate-400"
+                data-testid="filter-year"
+              >
+                <option value="">— Choisir —</option>
+                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Carburant</label>
+              <select
+                value={fFuel}
+                onChange={(e) => setFFuel(e.target.value)}
+                disabled={!fMake}
+                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm disabled:bg-slate-100 disabled:text-slate-400"
+                data-testid="filter-fuel"
+              >
+                <option value="">— Choisir —</option>
+                {fuels.map((f) => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={manualLoading}
+                className="w-full bn-btn-primary py-3 disabled:opacity-60"
+                data-testid="filter-submit"
+              >
+                {manualLoading ? "…" : (<><Search className="w-4 h-4" /> Rechercher</>)}
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
       {/* Sections cards */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="flex items-end justify-between mb-10">
@@ -158,6 +276,71 @@ export default function LandingPage() {
               </div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-12">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Comment ça marche</div>
+            <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">Votre pièce en 4 étapes simples</h2>
+            <p className="text-slate-500 mt-3 max-w-2xl mx-auto">De l'identification du véhicule à la livraison à domicile — un processus pensé pour vous faire gagner du temps.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 bn-stagger">
+            {[
+              {
+                n: "01",
+                Icon: Hash,
+                title: "Identifiez votre véhicule",
+                desc: "Saisissez votre numéro VIN ou choisissez manuellement la marque, le modèle, l'année et le carburant.",
+              },
+              {
+                n: "02",
+                Icon: ListOrdered,
+                title: "Choisissez la catégorie",
+                desc: "Mécanique, Électrique ou Carrosserie — puis affinez par sous-famille (moteur, freinage, éclairage…).",
+              },
+              {
+                n: "03",
+                Icon: ShoppingCart,
+                title: "Ajoutez au panier",
+                desc: "Sélectionnez les pièces 100% compatibles, vérifiez les marques équipementiers et validez votre commande.",
+              },
+              {
+                n: "04",
+                Icon: Package,
+                title: "Recevez chez vous",
+                desc: "Livraison rapide partout en Tunisie. Paiement à la livraison en toute sécurité.",
+              },
+            ].map((s) => (
+              <div key={s.n} className="relative bg-slate-50 border border-slate-200 p-6 rounded-sm group hover:border-red-600 hover:bg-white transition-all" data-testid={`step-${s.n}`}>
+                <div className="absolute top-4 right-4 font-display font-bold text-3xl text-slate-200 group-hover:text-red-100 transition-colors">{s.n}</div>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-sm bg-red-600 text-white mb-4">
+                  <s.Icon className="w-6 h-6" />
+                </div>
+                <h3 className="font-display font-bold text-lg text-slate-900 mb-2">{s.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 grid sm:grid-cols-3 gap-4">
+            {[
+              { Icon: CheckCircle2, t: "Aucun risque d'erreur", s: "Compatibilité garantie via VIN ou modèle exact" },
+              { Icon: Truck, t: "Livraison rapide", s: "Délais courts dans toute la Tunisie" },
+              { Icon: Shield, t: "Paiement sécurisé", s: "À la livraison ou par carte bancaire" },
+            ].map((p, i) => (
+              <div key={i} className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-sm">
+                <p.Icon className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-display font-semibold text-emerald-900 text-sm">{p.t}</div>
+                  <div className="text-xs text-emerald-700 mt-0.5">{p.s}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

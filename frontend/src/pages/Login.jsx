@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn, Facebook } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
@@ -35,7 +35,7 @@ export default function Login() {
       </div>
 
       <form onSubmit={submit} className="bg-white border border-slate-200 rounded-sm p-8 shadow-sm">
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Email</label>#
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Email</label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -65,6 +65,21 @@ export default function Login() {
 
         <button type="submit" disabled={loading} className="mt-6 w-full bn-btn-primary disabled:opacity-60" data-testid="login-submit-button">
           {loading ? "Connexion..." : (<><LogIn className="w-4 h-4" /> Se connecter</>)}
+        </button>
+
+        <div className="mt-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs uppercase tracking-widest text-slate-400">ou</span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => toast.info("Connexion Facebook — bientôt disponible. Configurez d'abord votre application Facebook Developer.")}
+          className="mt-4 w-full inline-flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#0e64d8] text-white font-medium px-6 py-3 rounded-sm transition-colors"
+          data-testid="login-facebook-button"
+        >
+          <Facebook className="w-4 h-4 fill-current" /> Continuer avec Facebook
         </button>
 
         <p className="mt-6 text-sm text-center text-slate-500">

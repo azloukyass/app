@@ -19,6 +19,12 @@ export default function VehicleDetail() {
 
   useEffect(() => {
     if (!vehicle || vehicle.vin !== vin) {
+      // For manually-built vehicles (MAN-...), we can't decode — context must be set
+      if (vin.startsWith("MAN-")) {
+        toast.error("Sélection manuelle perdue. Veuillez refaire la recherche.");
+        navigate("/");
+        return;
+      }
       (async () => {
         setLoading(true);
         try {
