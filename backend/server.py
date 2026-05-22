@@ -90,6 +90,13 @@ class OrderStatusIn(BaseModel):
     status: str
 
 
+class ContactIn(BaseModel):
+    name: str
+    email: EmailStr
+    subject: str
+    message: str
+
+
 async def get_current_user(request: Request) -> dict:
     token = request.cookies.get("access_token")
     if not token:
@@ -503,6 +510,38 @@ async def update_order_status(order_id: str, payload: OrderStatusIn, admin: dict
     res = await db.orders.update_one({"id": order_id}, {"$set": {"status": payload.status}})
     if res.matched_count == 0:
         raise HTTPException(404, "Commande introuvable")
+    return {"ok": True}
+
+
+@api.post("/contact")
+async def create_contact_message(data: ContactIn):
+    if not data.message.strip():
+        raise HTTPException(400, "Le message ne peut pas être vide")
+    doc = {
+        "id": str(uuid.uuid4()),
+        "name": data.name.strip(),
+        "email": data.email.lower().strip(),
+        "subject": data.subject.strip() or "Sans objet",
+        "message": data.message.strip(),
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.contact_messages.insert_one(doc)
+    doc.pop("_id", None)
+    return {"ok": True, "id": doc["id"]}
+
+
+@api.get("/admin/messages")
+async def admin_messages(admin: dict = Depends(require_admin)):
+    docs = await db.contact_messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return docs
+
+
+@api.patch("/admin/messages/{message_id}/read")
+async def mark_message_read(message_id: str, admin: dict = Depends(require_admin)):
+    res = await db.contact_messages.update_one({"id": message_id}, {"$set": {"read": True}})
+    if res.matched_count == 0:
+        raise HTTPException(404, "Message introuvable")
     return {"ok": True}
 
 

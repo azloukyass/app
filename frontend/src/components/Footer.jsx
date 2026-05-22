@@ -104,6 +104,8 @@ export default function Footer() {
             <li><Link to="/catalogue/electrique" className="hover:text-white">Pièces Électrique</Link></li>
             <li><Link to="/catalogue/carrosserie" className="hover:text-white">Pièces Carrosserie</Link></li>
             <li><Link to="/compte" className="hover:text-white">Mon compte</Link></li>
+            <li><Link to="/contact" className="hover:text-white" data-testid="footer-contact-link">Nous contacter</Link></li>
+            <li><Link to="/impressum" className="hover:text-white" data-testid="footer-impressum-link">Mentions légales</Link></li>
           </ul>
         </div>
 

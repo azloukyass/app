@@ -18,6 +18,8 @@ import Register from "@/pages/Register";
 import Account from "@/pages/Account";
 import AdminDashboard from "@/pages/AdminDashboard";
 import SearchResults from "@/pages/SearchResults";
+import Contact from "@/pages/Contact";
+import Impressum from "@/pages/Impressum";
 import NotFound from "@/pages/NotFound";
 
 function Layout({ children }) {
@@ -44,6 +46,8 @@ export default function App() {
               <Route path="/catalogue/:section" element={<PartsCategory />} />
               <Route path="/catalogue/:section/:category" element={<PartsList />} />
               <Route path="/recherche" element={<SearchResults />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/impressum" element={<Impressum />} />
               <Route path="/panier" element={<Cart />} />
               <Route path="/connexion" element={<Login />} />
               <Route path="/inscription" element={<Register />} />

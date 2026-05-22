@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Package, AlertCircle, TrendingUp, Mail, Phone, MapPin } from "lucide-react";
+import { Users, Package, AlertCircle, TrendingUp, Mail, Phone, MapPin, MessageSquare, Check } from "lucide-react";
 import { api, formatApiError, formatPrice } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -10,19 +10,22 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [s, u, o] = await Promise.all([
+      const [s, u, o, m] = await Promise.all([
         api.get("/admin/stats"),
         api.get("/admin/users"),
         api.get("/admin/orders"),
+        api.get("/admin/messages"),
       ]);
       setStats(s.data);
       setUsers(u.data);
       setOrders(o.data);
+      setMessages(m.data);
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -41,6 +44,17 @@ export default function AdminDashboard() {
       toast.error(formatApiError(err));
     }
   };
+
+  const markMessageRead = async (id) => {
+    try {
+      await api.patch(`/admin/messages/${id}/read`);
+      load();
+    } catch (err) {
+      toast.error(formatApiError(err));
+    }
+  };
+
+  const unreadCount = messages.filter((m) => !m.read).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" data-testid="admin-dashboard">
@@ -186,6 +200,40 @@ function UsersTable({ users }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function MessagesTable({ messages, onMarkRead }) {
+  if (messages.length === 0)
+    return <div className="p-10 text-center text-slate-500">Aucun message pour le moment.</div>;
+  return (
+    <div className="divide-y divide-slate-100">
+      {messages.map((m) => (
+        <div key={m.id} className={`p-5 sm:p-6 ${!m.read ? "bg-red-50/40" : ""}`} data-testid={`admin-message-${m.id}`}>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2">
+                {!m.read && <span className="inline-block w-2 h-2 bg-red-600 rounded-full" title="Non lu" />}
+                <h3 className="font-display font-bold text-slate-900">{m.subject}</h3>
+              </div>
+              <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3" /> <a href={`mailto:${m.email}`} className="hover:text-red-600">{m.email}</a></span>
+                <span>·</span>
+                <span>{m.name}</span>
+                <span>·</span>
+                <span>{new Date(m.created_at).toLocaleString("fr-FR")}</span>
+              </div>
+            </div>
+            {!m.read && (
+              <button onClick={() => onMarkRead(m.id)} className="text-xs inline-flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-sm hover:bg-slate-700" data-testid={`mark-read-${m.id}`}>
+                <Check className="w-3 h-3" /> Marquer lu
+              </button>
+            )}
+          </div>
+          <p className="mt-3 text-sm text-slate-700 leading-relaxed whitespace-pre-line">{m.message}</p>
+        </div>
+      ))}
     </div>
   );
 }
