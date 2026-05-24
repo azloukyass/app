@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { BRAND_BY_SLUG, logoUrl } from "@/data/brands";
 import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import ModelSilhouette from "@/components/ModelSilhouette";
 
 export default function BrandModels() {
   const { brand } = useParams();
@@ -135,38 +136,28 @@ export default function BrandModels() {
             Aucun modèle ne correspond à votre recherche.
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             {filtered.map((model) => (
               <button
                 key={model.name}
                 onClick={() => handleSelectModel(model)}
-                className="group relative overflow-hidden bg-white border border-slate-200 hover:border-slate-400 hover:-translate-y-0.5 transition-all text-left"
+                className="model-card group flex flex-col items-center bg-white border border-slate-200 hover:border-[color:var(--brand-color)] rounded-sm p-4 transition-all duration-200"
                 data-testid={`brand-model-${model.name.replace(/\s+/g, "-")}`}
                 style={{ "--brand-color": data.color }}
               >
-                <div className="relative h-36 sm:h-44 bg-slate-100 overflow-hidden">
-                  <img
-                    src={model.img}
-                    alt={model.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: `linear-gradient(180deg, transparent 40%, ${data.color}99 100%)` }}
+                <div className="w-full h-20 sm:h-24 flex items-center justify-center">
+                  <ModelSilhouette
+                    kind={model.kind}
+                    color="#94A3B8"
+                    className="model-silhouette w-full h-full max-w-[180px] transition-colors duration-200"
                   />
                 </div>
-                <div className="p-3 sm:p-4 border-t border-slate-100">
-                  <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 mb-1">
+                <div className="mt-3 text-center w-full">
+                  <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 mb-0.5">
                     {data.name}
                   </div>
-                  <div className="font-display text-sm sm:text-base font-bold text-slate-900 group-hover:text-slate-700 transition-colors truncate">
+                  <div className="text-xs sm:text-sm font-semibold text-slate-800 group-hover:text-[color:var(--brand-color)] transition-colors leading-snug">
                     {model.name}
-                  </div>
-                  <div
-                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold opacity-70 group-hover:opacity-100 transition-opacity"
-                    style={{ color: data.color }}
-                  >
-                    Voir les pièces <ArrowRight className="w-3 h-3" />
                   </div>
                 </div>
               </button>
@@ -174,6 +165,15 @@ export default function BrandModels() {
           </div>
         )}
       </div>
+
+      <style>{`
+        .model-card:hover .model-silhouette path {
+          fill: var(--brand-color);
+        }
+        .model-card:hover .model-silhouette circle:nth-child(odd) {
+          fill: var(--brand-color);
+        }
+      `}</style>
 
       {/* Year/Fuel selection modal */}
       {pendingModel && (

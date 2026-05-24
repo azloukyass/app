@@ -255,9 +255,6 @@ export default function LandingPage() {
                 {BRANDS.length} marques · plus de {BRANDS.reduce((s, b) => s + b.models.length, 0)} modèles couverts
               </p>
             </div>
-            <div className="text-xs text-slate-400 italic">
-              Survolez un logo pour voir la couleur de la marque · cliquez pour parcourir les modèles
-            </div>
           </div>
 
           <div

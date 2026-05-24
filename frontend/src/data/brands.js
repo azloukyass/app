@@ -235,14 +235,11 @@ const BRAND_DEFS = [
   },
 ];
 
-// Materialise: for each brand, reset pool counters and assign img per model
-export const BRANDS = BRAND_DEFS.map((brand) => {
-  resetPools();
-  return {
-    ...brand,
-    models: brand.models.map((m) => ({ name: m.name, img: pick(m.kind) })),
-  };
-});
+// Materialise: for each brand, keep the kind for silhouette rendering
+export const BRANDS = BRAND_DEFS.map((brand) => ({
+  ...brand,
+  models: brand.models.map((m) => ({ name: m.name, kind: m.kind })),
+}));
 
 export const BRAND_BY_SLUG = Object.fromEntries(BRANDS.map((b) => [b.slug, b]));
 
