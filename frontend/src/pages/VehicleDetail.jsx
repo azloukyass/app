@@ -40,6 +40,25 @@ export default function VehicleDetail() {
     }
   }, [vin, vehicle, setVehicle, navigate]);
 
+  // Poll for PartSouq background scraping result (every 8s, up to 8 attempts)
+  useEffect(() => {
+    if (!vehicle || vehicle.source === "partsouq" || vehicle.source === "partsouq-cache") return;
+    if (!vehicle.vin || vehicle.vin.startsWith("MAN-")) return;
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts += 1;
+      if (attempts > 8) { clearInterval(interval); return; }
+      try {
+        const { data } = await api.get(`/vin/partsouq-status/${vehicle.vin}`);
+        if (data.ready) {
+          setVehicle(data);
+          clearInterval(interval);
+        }
+      } catch {}
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [vehicle?.vin, vehicle?.source, setVehicle]);
+
   if (loading || !vehicle) {
     return <div className="min-h-[60vh] flex items-center justify-center text-slate-500">Chargement du véhicule…</div>;
   }
@@ -75,6 +94,14 @@ export default function VehicleDetail() {
 
       {/* 3 category cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {!vehicle.partsouq_categories && vehicle.source !== "partsouq" && vehicle.source !== "partsouq-cache" && !vehicle.vin.startsWith("MAN-") && (
+          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-sm flex items-center gap-3" data-testid="partsouq-loading">
+            <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+            <div className="text-sm text-amber-900">
+              <strong>Catalogue PartSouq en cours de récupération…</strong> Les références OEM officielles s'afficheront ici dans quelques secondes (~30-60s).
+            </div>
+          </div>
+        )}
         <div className="grid md:grid-cols-3 gap-6 bn-stagger">
           {SECTIONS.map(({ slug, label, desc, Icon, color, img }) => (
             <Link

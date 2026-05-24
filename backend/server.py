@@ -287,50 +287,54 @@ def _translate_fuel(fuel: str) -> str:
     return fuel or "Essence"
 
 
+import asyncio
+
+
+async def _partsouq_background_scrape(vin: str):
+    """Scrape PartSouq in background and save to cache for next request."""
+    try:
+        ps = await partsouq_scrape(vin)
+        if ps and ps.get("make"):
+            doc = {
+                "vin": vin,
+                "make": ps["make"],
+                "model": ps["model"],
+                "year": ps["year"],
+                "fuel": "—",
+                "engine": "—",
+                "trim": "—",
+                "source": "partsouq",
+                "partsouq_title": ps.get("title", ""),
+                "partsouq_categories": ps.get("categories", []),
+                "partsouq_part_numbers": ps.get("part_numbers", []),
+                "cached_at": datetime.now(timezone.utc).isoformat(),
+            }
+            await db.partsouq_cache.update_one(
+                {"vin": vin}, {"$set": doc}, upsert=True
+            )
+            logging.info(f"PartSouq cached for VIN {vin}")
+    except Exception as e:
+        logging.warning(f"PartSouq background fail for {vin}: {e}")
+
+
 @api.post("/vin/decode")
 async def decode_vin(payload: VinIn):
     vin = (payload.vin or "").strip().upper()
     if len(vin) < 11 or len(vin) > 17:
         raise HTTPException(400, "Le numéro VIN doit contenir entre 11 et 17 caractères")
 
-    info = None
-
-    # 0. Try PartSouq cache (MongoDB)
-    cached = await db.partsouq_cache.find_one({"vin": vin}, {"_id": 0})
+    # 0. Try PartSouq cache (MongoDB) — instant if previously scraped
+    cached = await db.partsouq_cache.find_one({"vin": vin}, {"_id": 0, "cached_at": 0})
     if cached:
         return {**cached, "source": "partsouq-cache"}
 
-    # 1. Try PartSouq via ScrapingBee stealth (75 credits/req — cached after success)
-    if os.environ.get("SCRAPINGBEE_API_KEY"):
-        try:
-            ps = await partsouq_scrape(vin)
-            if ps and ps.get("make"):
-                info = {
-                    "make": ps["make"],
-                    "model": ps["model"],
-                    "year": ps["year"],
-                    "fuel": "—",
-                    "engine": "—",
-                    "trim": "—",
-                    "source": "partsouq",
-                    "partsouq_title": ps.get("title", ""),
-                    "partsouq_categories": ps.get("categories", []),
-                    "partsouq_part_numbers": ps.get("part_numbers", []),
-                }
-                # Cache full payload
-                doc = {"vin": vin, **info, "cached_at": datetime.now(timezone.utc).isoformat()}
-                await db.partsouq_cache.update_one(
-                    {"vin": vin}, {"$set": doc}, upsert=True
-                )
-                return {"vin": vin, **info}
-        except Exception as e:
-            logging.warning(f"PartSouq fail: {e}")
+    info = None
 
-    # 2. Try AutoDev API
+    # 1. Try AutoDev API first (fast ~1s, returns immediately)
     autodev_key = os.environ.get("AUTODEV_API_KEY")
     if autodev_key:
         try:
-            async with httpx.AsyncClient(timeout=8.0) as cl:
+            async with httpx.AsyncClient(timeout=6.0) as cl:
                 r = await cl.get(f"https://auto.dev/api/vin/{vin}?apikey={autodev_key}")
                 if r.status_code == 200:
                     d = r.json()
@@ -365,6 +369,11 @@ async def decode_vin(payload: VinIn):
                             }
         except Exception as e:
             logging.warning(f"AutoDev fail: {e}")
+
+    # 2. Trigger PartSouq scraping in background (non-blocking)
+    # Result will be available on next request via cache
+    if os.environ.get("SCRAPINGBEE_API_KEY"):
+        asyncio.create_task(_partsouq_background_scrape(vin))
 
     # 2. Fallback to NHTSA (free US-centric)
     if not info:
@@ -423,6 +432,16 @@ async def decode_vin(payload: VinIn):
             raise HTTPException(404, "Impossible d'identifier ce VIN. Vérifiez le numéro et réessayez.")
 
     return {"vin": vin, **info}
+
+
+@api.get("/vin/partsouq-status/{vin}")
+async def partsouq_status(vin: str):
+    """Check if PartSouq scraping is complete for a VIN."""
+    vin = vin.strip().upper()
+    cached = await db.partsouq_cache.find_one({"vin": vin}, {"_id": 0, "cached_at": 0})
+    if cached:
+        return {"ready": True, **cached, "source": "partsouq-cache"}
+    return {"ready": False, "vin": vin}
 
 
 class ManualVehicleIn(BaseModel):
