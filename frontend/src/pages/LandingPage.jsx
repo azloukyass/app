@@ -261,25 +261,24 @@ export default function LandingPage() {
           </div>
 
           <div
-            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4"
+            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10"
             data-testid="brands-grid"
           >
             {BRANDS.map((b) => (
               <Link
                 key={b.slug}
                 to={`/marque/${b.slug}`}
-                className="brand-card group relative bg-white border border-slate-200 hover:border-transparent rounded-sm aspect-[4/3] flex flex-col items-center justify-center p-4 transition-all duration-300"
+                className="brand-card group flex flex-col items-center justify-center p-3 transition-all duration-300"
                 style={{
                   "--brand-color": b.color,
-                  "--brand-bg": b.bg,
                 }}
                 data-testid={`brand-card-${b.slug}`}
               >
-                <div className="brand-logo-wrap relative w-full h-full flex items-center justify-center">
+                <div className="brand-logo-wrap relative w-full h-20 sm:h-24 flex items-center justify-center">
                   <img
                     src={logoUrl(b.slug)}
                     alt={b.name}
-                    className="brand-logo max-h-[60%] max-w-[80%] object-contain transition-all duration-300"
+                    className="brand-logo max-h-full max-w-[80%] object-contain transition-all duration-300"
                     loading="lazy"
                     onError={(e) => {
                       e.target.style.display = "none";
@@ -294,7 +293,7 @@ export default function LandingPage() {
                     {b.name}
                   </span>
                 </div>
-                <div className="mt-2 text-[10px] sm:text-xs font-semibold text-slate-500 group-hover:text-[color:var(--brand-color)] transition-colors uppercase tracking-wider text-center truncate w-full">
+                <div className="mt-3 text-[10px] sm:text-xs font-semibold text-slate-500 group-hover:text-[color:var(--brand-color)] transition-colors uppercase tracking-wider text-center truncate w-full">
                   {b.name}
                 </div>
               </Link>
@@ -303,21 +302,15 @@ export default function LandingPage() {
         </div>
 
         <style>{`
-          .brand-card { will-change: transform, box-shadow; }
+          .brand-card { will-change: transform; }
           .brand-card .brand-logo {
             filter: grayscale(1) brightness(0.75) contrast(1.1);
-            opacity: 0.7;
-          }
-          .brand-card:hover {
-            background-color: var(--brand-bg);
-            box-shadow: 0 12px 28px -10px var(--brand-color);
-            transform: translateY(-3px);
-            border-color: var(--brand-color);
+            opacity: 0.65;
           }
           .brand-card:hover .brand-logo {
             filter: none;
             opacity: 1;
-            transform: scale(1.08);
+            transform: scale(1.12);
           }
         `}</style>
       </section>
