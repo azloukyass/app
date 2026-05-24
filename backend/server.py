@@ -20,7 +20,7 @@ from pydantic import BaseModel, EmailStr
 
 from catalog_data import CATALOG, get_section, get_category, find_part
 from vehicles_catalog import get_catalog as get_vehicles_catalog, VEHICLES
-from partsouq_scraper import scrape_vin as partsouq_scrape
+from partsouq_scraper import scrape_vin as partsouq_scrape, scrape_subgroup_parts
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -305,8 +305,8 @@ async def _partsouq_background_scrape(vin: str):
                 "trim": "—",
                 "source": "partsouq",
                 "partsouq_title": ps.get("title", ""),
+                "partsouq_tree": ps.get("tree", []),
                 "partsouq_categories": ps.get("categories", []),
-                "partsouq_part_numbers": ps.get("part_numbers", []),
                 "cached_at": datetime.now(timezone.utc).isoformat(),
             }
             await db.partsouq_cache.update_one(
@@ -442,6 +442,66 @@ async def partsouq_status(vin: str):
     if cached:
         return {"ready": True, **cached, "source": "partsouq-cache"}
     return {"ready": False, "vin": vin}
+
+
+class SubgroupIn(BaseModel):
+    vin: str
+    cid: str
+    url: str
+    label: Optional[str] = ""
+
+
+@api.post("/partsouq/subgroup")
+async def partsouq_subgroup(payload: SubgroupIn):
+    """Fetch all OEM parts for a given subgroup (lazy on-demand, cached by vin+cid)."""
+    vin = (payload.vin or "").strip().upper()
+    cid = (payload.cid or "").strip()
+    url = (payload.url or "").strip()
+    if not vin or not cid or not url:
+        raise HTTPException(400, "vin, cid et url sont obligatoires")
+
+    cache_key = {"vin": vin, "cid": cid}
+    cached = await db.partsouq_subgroups.find_one(cache_key, {"_id": 0, "cached_at": 0})
+    if cached:
+        return {**cached, "source": "cache"}
+
+    if not os.environ.get("SCRAPINGBEE_API_KEY"):
+        raise HTTPException(503, "Service de scraping indisponible")
+
+    try:
+        result = await scrape_subgroup_parts(url)
+    except Exception as e:
+        logging.warning(f"Subgroup scrape error vin={vin} cid={cid}: {e}")
+        raise HTTPException(502, "Échec de la récupération depuis PartSouq")
+
+    if not result:
+        raise HTTPException(502, "Aucune donnée renvoyée par PartSouq")
+
+    doc = {
+        "vin": vin,
+        "cid": cid,
+        "label": payload.label or result.get("schema_label", ""),
+        "schema_label": result.get("schema_label", ""),
+        "schema_url": result.get("schema_url", ""),
+        "diagram_url": result.get("diagram_url", ""),
+        "parts": result.get("parts", []),
+        "parts_count": result.get("parts_count", len(result.get("parts", []))),
+        "cached_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.partsouq_subgroups.update_one(cache_key, {"$set": doc}, upsert=True)
+    return {**doc, "source": "fresh"}
+
+
+@api.get("/partsouq/subgroup/{vin}/{cid}")
+async def partsouq_subgroup_cached(vin: str, cid: str):
+    """Read-only lookup of a cached subgroup."""
+    vin = vin.strip().upper()
+    cached = await db.partsouq_subgroups.find_one(
+        {"vin": vin, "cid": cid}, {"_id": 0, "cached_at": 0}
+    )
+    if not cached:
+        raise HTTPException(404, "Sous-catégorie non disponible (lancez d'abord la récupération)")
+    return cached
 
 
 class ManualVehicleIn(BaseModel):
@@ -632,6 +692,7 @@ async def on_startup():
     await db.orders.create_index("user_id")
     await db.orders.create_index("id")
     await db.partsouq_cache.create_index("vin", unique=True)
+    await db.partsouq_subgroups.create_index([("vin", 1), ("cid", 1)], unique=True)
     await seed_admin()
 
 

@@ -33,38 +33,32 @@ Build a French-language auto parts e-commerce platform "BENNOURI Pièces Auto" f
 ## What's Been Implemented (2026-05-19)
 ### Backend
 - `POST /api/auth/register|login|logout`, `GET /api/auth/me` — JWT + bcrypt
-- `POST /api/vin/decode` — NHTSA + fallback
+- `POST /api/vin/decode` — NHTSA + fallback + PartSouq async background scrape
+- `GET /api/vin/partsouq-status/{vin}` — polling endpoint for background scrape
+- `POST /api/partsouq/subgroup` — **NEW (2026-05-24)** lazy fetch all OEM parts for a subgroup (2 ScrapingBee calls, MongoDB cached by vin+cid)
+- `GET /api/partsouq/subgroup/{vin}/{cid}` — read-only cache lookup
 - `GET /api/catalog/sections|/{section}|/{section}/{category}`
 - `POST /api/orders`, `GET /api/orders/mine`
 - `GET /api/admin/{users,orders,stats}`, `PATCH /api/admin/orders/{id}`
+- `POST /api/contact`, `GET /api/admin/messages`
 - Admin seeded on startup: `admin@bennouri.com / Admin@123`
-- MongoDB indexes on users.email (unique), users.id, orders.user_id, orders.id
-- **Tests: 25/25 pytest cases passing (100%)**
+- MongoDB indexes on users.email (unique), users.id, orders.user_id, orders.id, partsouq_cache.vin (unique), partsouq_subgroups(vin+cid) (unique)
 
-### Frontend (12 pages/components)
-- LandingPage with hero, VIN form, 3 section cards, brand showcase, CTA strip
-- VinSearch (dedicated screen 1)
-- VehicleDetail (screen 2 with breadcrumb + 3 cards)
-- PartsCategory (screen 3 with subcategories + realistic SVG icons)
-- PartsList (cards with image, ref, brand, price TND, add-to-cart)
-- Cart (with Cash-on-Delivery checkout, vehicle reminder)
-- Login / Register
-- Account (my orders)
-- AdminDashboard (stats + orders table with status updates + users table)
-- Footer (address, phone, email, Visa/Mastercard/Cash SVG icons, trust strip)
-- Custom SVG icons for engine, gearbox, brake, battery, headlight, etc.
+### Frontend
+- LandingPage, VinSearch, VehicleDetail, PartsCategory, PartsList, Cart, Login, Register, Account, AdminDashboard, Contact, Impressum
+- **NEW (2026-05-24)** `PartsouqCatalog.jsx` — full OEM tree browser (collapse/expand groups, search filter, click subgroup → modal with parts table)
+- Footer with address, phone, email, Visa/Mastercard SVG icons
 
-### Design system
-- Typography: Outfit (display) + IBM Plex Sans (body) + JetBrains Mono (VIN)
-- Colors: Navy `#0F172A` + Steel `#64748B` + Red `#DC2626` accent
-- Sharp corners (industrial feel), 1px borders, subtle hover shadows
-- Custom animations (bn-fade-up, bn-stagger)
+### PartSouq Lazy On-Demand Scraping (2026-05-24)
+- **Stage 1** (VIN decode): single ScrapingBee call extracts the FULL catalog tree (groups + subgroups + cid links) and caches by VIN
+- **Stage 2** (Click subgroup): 2 ScrapingBee calls extract parts table with columns `Numéro · Nom · Code · Remplacement · Remarque`, cached by `{vin, cid}`
+- Verified for Renault Clio IV VIN `VF15R0K0H48649991` → 67 groups, 189 subgroups, 9 OEM parts in "Water pump" (matching user-provided sample exactly)
 
 ## Prioritized Backlog
 ### P1
-- Real payment integration (Stripe / D17 / Konnect for Tunisia)
+- Real payment integration (Stripe — Visa/Mastercard) — keys ready in environment
+- Connect OEM part numbers to internal inventory / cart flow (so user can add scraped OEM ref directly to Bennouri cart)
 - Email notifications on order confirmation (Resend / SendGrid)
-- Search bar inside parts list (by ref or name)
 - Real parts database (currently in-memory dict)
 
 ### P2
@@ -73,6 +67,6 @@ Build a French-language auto parts e-commerce platform "BENNOURI Pièces Auto" f
 - Image gallery per part (multiple angles)
 - PDF invoice export
 - SMS notifications via Twilio for delivery updates
-- Brute-force lockout on login (mentioned by testing agent)
-- Password strength validation (mentioned by testing agent)
+- Brute-force lockout on login
+- Password strength validation
 - Replace CORS `*` with explicit frontend origin (when production-ready)
