@@ -4,6 +4,7 @@ import { ArrowRight, Search, Truck, Shield, Award, ChevronRight, Hash, Zap, Wren
 import { toast } from "sonner";
 import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import { BRANDS, logoUrl } from "@/data/brands";
 
 const HERO_IMG =
   "https://images.pexels.com/photos/10905352/pexels-photo-10905352.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1600";
@@ -241,42 +242,84 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Sections cards */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Catalogue</div>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">Trois familles, des milliers de pièces</h2>
+      {/* Constructeurs automobile */}
+      <section className="bg-slate-50 border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Constructeurs</div>
+              <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">
+                Constructeurs automobile
+              </h2>
+              <p className="text-slate-500 mt-2 text-sm">
+                {BRANDS.length} marques · plus de {BRANDS.reduce((s, b) => s + b.models.length, 0)} modèles couverts
+              </p>
+            </div>
+            <div className="text-xs text-slate-400 italic">
+              Survolez un logo pour voir la couleur de la marque · cliquez pour parcourir les modèles
+            </div>
+          </div>
+
+          <div
+            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4"
+            data-testid="brands-grid"
+          >
+            {BRANDS.map((b) => (
+              <Link
+                key={b.slug}
+                to={`/marque/${b.slug}`}
+                className="brand-card group relative bg-white border border-slate-200 hover:border-transparent rounded-sm aspect-[4/3] flex flex-col items-center justify-center p-4 transition-all duration-300"
+                style={{
+                  "--brand-color": b.color,
+                  "--brand-bg": b.bg,
+                }}
+                data-testid={`brand-card-${b.slug}`}
+              >
+                <div className="brand-logo-wrap relative w-full h-full flex items-center justify-center">
+                  <img
+                    src={logoUrl(b.slug)}
+                    alt={b.name}
+                    className="brand-logo max-h-[60%] max-w-[80%] object-contain transition-all duration-300"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      const fb = e.target.parentNode.querySelector(".brand-logo-fallback");
+                      if (fb) fb.style.display = "block";
+                    }}
+                  />
+                  <span
+                    className="brand-logo-fallback font-display font-bold text-slate-700 group-hover:text-[color:var(--brand-color)] transition-colors text-lg"
+                    style={{ display: "none" }}
+                  >
+                    {b.name}
+                  </span>
+                </div>
+                <div className="mt-2 text-[10px] sm:text-xs font-semibold text-slate-500 group-hover:text-[color:var(--brand-color)] transition-colors uppercase tracking-wider text-center truncate w-full">
+                  {b.name}
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 bn-stagger">
-          {[
-            { slug: "mecanique", label: "Mécanique", desc: "Moteur, boîte, freinage, suspension, direction.", icon: Wrench, img: "https://images.pexels.com/photos/4489732/pexels-photo-4489732.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
-            { slug: "electrique", label: "Électrique", desc: "Batterie, démarrage, éclairage, faisceaux.", icon: Zap, img: "https://images.pexels.com/photos/2127733/pexels-photo-2127733.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
-            { slug: "carrosserie", label: "Carrosserie", desc: "Pare-chocs, ailes, capots, vitres, rétros.", icon: CarFront, img: "https://images.pexels.com/photos/1638459/pexels-photo-1638459.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
-          ].map((c) => (
-            <Link
-              key={c.slug}
-              to={`/catalogue/${c.slug}`}
-              className="group relative overflow-hidden rounded-sm border border-slate-200 bg-white hover:border-slate-400 transition-all"
-              data-testid={`section-card-${c.slug}`}
-            >
-              <div className="relative h-52 overflow-hidden bg-slate-100">
-                <img src={c.img} alt={c.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent" />
-                <c.icon className="absolute top-4 right-4 w-9 h-9 text-white bg-red-600 p-1.5 rounded-sm" />
-              </div>
-              <div className="p-6">
-                <h3 className="font-display font-bold text-xl text-slate-900 mb-2">{c.label}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{c.desc}</p>
-                <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-red-600 group-hover:gap-2 transition-all">
-                  Découvrir <ArrowRight className="w-4 h-4" />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <style>{`
+          .brand-card { will-change: transform, box-shadow; }
+          .brand-card .brand-logo {
+            filter: grayscale(1) brightness(0.75) contrast(1.1);
+            opacity: 0.7;
+          }
+          .brand-card:hover {
+            background-color: var(--brand-bg);
+            box-shadow: 0 12px 28px -10px var(--brand-color);
+            transform: translateY(-3px);
+            border-color: var(--brand-color);
+          }
+          .brand-card:hover .brand-logo {
+            filter: none;
+            opacity: 1;
+            transform: scale(1.08);
+          }
+        `}</style>
       </section>
 
       {/* How it works */}

@@ -20,6 +20,7 @@ import Register from "@/pages/Register";
 import Account from "@/pages/Account";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PartsouqCatalog from "@/pages/PartsouqCatalog";
+import BrandModels from "@/pages/BrandModels";
 import SearchResults from "@/pages/SearchResults";
 import Contact from "@/pages/Contact";
 import Impressum from "@/pages/Impressum";
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/recherche-vin" element={<VinSearch />} />
               <Route path="/vehicule/:vin" element={<VehicleDetail />} />
               <Route path="/vehicule/:vin/catalogue-oem" element={<PartsouqCatalog />} />
+              <Route path="/marque/:brand" element={<BrandModels />} />
               <Route path="/catalogue/:section" element={<PartsCategory />} />
               <Route path="/catalogue/:section/:category" element={<PartsList />} />
               <Route path="/recherche" element={<SearchResults />} />
