@@ -20,6 +20,7 @@ from pydantic import BaseModel, EmailStr
 
 from catalog_data import CATALOG, get_section, get_category, find_part
 from vehicles_catalog import get_catalog as get_vehicles_catalog, VEHICLES
+from partsouq_scraper import scrape_vin as partsouq_scrape
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -294,7 +295,38 @@ async def decode_vin(payload: VinIn):
 
     info = None
 
-    # 1. Try AutoDev API (paid, global coverage)
+    # 0. Try PartSouq cache (MongoDB)
+    cached = await db.partsouq_cache.find_one({"vin": vin}, {"_id": 0})
+    if cached:
+        return {**cached, "source": "partsouq-cache"}
+
+    # 1. Try PartSouq via ScrapingBee stealth (75 credits/req — cached after success)
+    if os.environ.get("SCRAPINGBEE_API_KEY"):
+        try:
+            ps = await partsouq_scrape(vin)
+            if ps and ps.get("make"):
+                info = {
+                    "make": ps["make"],
+                    "model": ps["model"],
+                    "year": ps["year"],
+                    "fuel": "—",
+                    "engine": "—",
+                    "trim": "—",
+                    "source": "partsouq",
+                    "partsouq_title": ps.get("title", ""),
+                    "partsouq_categories": ps.get("categories", []),
+                    "partsouq_part_numbers": ps.get("part_numbers", []),
+                }
+                # Cache full payload
+                doc = {"vin": vin, **info, "cached_at": datetime.now(timezone.utc).isoformat()}
+                await db.partsouq_cache.update_one(
+                    {"vin": vin}, {"$set": doc}, upsert=True
+                )
+                return {"vin": vin, **info}
+        except Exception as e:
+            logging.warning(f"PartSouq fail: {e}")
+
+    # 2. Try AutoDev API
     autodev_key = os.environ.get("AUTODEV_API_KEY")
     if autodev_key:
         try:
@@ -580,6 +612,7 @@ async def on_startup():
     await db.users.create_index("id")
     await db.orders.create_index("user_id")
     await db.orders.create_index("id")
+    await db.partsouq_cache.create_index("vin", unique=True)
     await seed_admin()
 
 

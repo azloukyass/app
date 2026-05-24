@@ -101,6 +101,50 @@ export default function VehicleDetail() {
             </Link>
           ))}
         </div>
+
+        {/* PartSouq categories (if available) */}
+        {Array.isArray(vehicle.partsouq_categories) && vehicle.partsouq_categories.length > 0 && (
+          <div className="mt-16 bg-white border border-slate-200 rounded-sm" data-testid="partsouq-categories">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-red-600 mb-1">Catalogue PartSouq officiel</div>
+                <h3 className="font-display text-xl font-bold text-slate-900">Toutes les pièces d'origine pour votre véhicule</h3>
+              </div>
+              <span className="bn-chip">{vehicle.partsouq_categories.length} catégories</span>
+            </div>
+            <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {vehicle.partsouq_categories.map((c, i) => (
+                <a
+                  key={i}
+                  href={c.url.replaceAll("&amp;", "&")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-slate-700 hover:text-red-600 hover:bg-slate-50 px-3 py-2 rounded-sm border border-slate-100 hover:border-red-200 transition-colors truncate"
+                  title={c.label}
+                  data-testid={`partsouq-cat-${i}`}
+                >
+                  {c.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PartSouq OEM part numbers */}
+        {Array.isArray(vehicle.partsouq_part_numbers) && vehicle.partsouq_part_numbers.length > 0 && (
+          <div className="mt-8 bg-white border border-slate-200 rounded-sm" data-testid="partsouq-oem">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-red-600 mb-1">Références OEM</div>
+              <h3 className="font-display text-xl font-bold text-slate-900">Numéros de pièces d'origine</h3>
+              <p className="text-xs text-slate-500 mt-1">Extraits automatiquement depuis PartSouq — utilisez ces références pour rechercher la pièce exacte.</p>
+            </div>
+            <div className="p-4 flex flex-wrap gap-2">
+              {vehicle.partsouq_part_numbers.map((p, i) => (
+                <span key={i} className="font-mono-vin text-xs bg-slate-100 text-slate-700 px-2.5 py-1.5 rounded-sm border border-slate-200" data-testid={`oem-${i}`}>{p}</span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
