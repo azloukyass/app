@@ -7,9 +7,9 @@ import { CategoryIcon } from "@/lib/icons";
 import { useCart } from "@/context/CartContext";
 
 const SECTION_META = {
-  mecanique: { label: "Mécanique", color: "text-red-600", accent: "bg-red-50 border-red-100" },
-  electrique: { label: "Électrique", color: "text-amber-600", accent: "bg-amber-50 border-amber-100" },
-  carrosserie: { label: "Carrosserie", color: "text-slate-700", accent: "bg-slate-50 border-slate-200" },
+  mecanique:  { label: "Mécanique",  color: "text-red-600",    bar: "from-red-700 to-red-500",       iconStroke: "#dc2626" },
+  electrique: { label: "Électrique", color: "text-amber-600",  bar: "from-amber-600 to-amber-400",   iconStroke: "#d97706" },
+  carrosserie:{ label: "Carrosserie",color: "text-slate-700",  bar: "from-slate-700 to-slate-500",   iconStroke: "#334155" },
 };
 
 export default function PartsCategory() {
@@ -58,32 +58,44 @@ export default function PartsCategory() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 bn-stagger">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="bg-white border border-slate-200 rounded-sm divide-y divide-slate-100 overflow-hidden">
           {data.categories.map((c) => (
-            <Link
-              key={c.slug}
-              to={`/catalogue/${section}/${c.slug}`}
-              className="group relative bg-white border border-slate-200 rounded-sm overflow-hidden hover:border-slate-400 hover:shadow-md transition-all"
-              data-testid={`subcategory-${c.slug}`}
-            >
-              <div className="relative h-40 bg-slate-100 overflow-hidden">
-                <img src={c.image} alt={c.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent" />
-                <div className={`absolute top-3 left-3 p-2 ${meta.accent} border rounded-sm shadow-sm`}>
-                  <CategoryIcon name={c.icon} className="w-7 h-7" stroke={section === "mecanique" ? "#dc2626" : section === "electrique" ? "#d97706" : "#334155"} />
+            <div key={c.slug} className="group" data-testid={`subcategory-row-${c.slug}`}>
+              {/* Gradient header bar with category title */}
+              <Link
+                to={`/catalogue/${section}/${c.slug}`}
+                className={`block bg-gradient-to-r ${meta.bar} px-5 py-2 hover:brightness-110 transition-all`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-display text-sm sm:text-base font-bold text-white tracking-wide uppercase">{c.label}</span>
+                  <ArrowRight className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="absolute bottom-3 right-3 bn-chip bg-white/95 text-slate-700">
-                  {c.count} pièces
+              </Link>
+
+              {/* Content: icon + sub-items inline */}
+              <Link
+                to={`/catalogue/${section}/${c.slug}`}
+                className="flex items-start gap-5 px-5 py-5 hover:bg-slate-50 transition-colors"
+                data-testid={`subcategory-${c.slug}`}
+              >
+                <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-sm group-hover:border-slate-400 transition-colors">
+                  <CategoryIcon name={c.icon} className="w-10 h-10" stroke={meta.iconStroke} />
                 </div>
-              </div>
-              <div className="p-5">
-                <h3 className="font-display font-bold text-lg text-slate-900">{c.label}</h3>
-                <div className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-red-600 group-hover:gap-2 transition-all">
-                  Voir les pièces <ArrowRight className="w-4 h-4" />
+                <div className="flex-1 min-w-0">
+                  {c.sub_items && c.sub_items.length > 0 ? (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-slate-700">
+                      {c.sub_items.map((s, i) => (
+                        <span key={i} className="hover:text-red-600 transition-colors">{s}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-slate-500 italic">Aucun sous-élément renseigné</div>
+                  )}
+                  <div className="mt-2 text-xs text-slate-400 uppercase tracking-widest font-semibold">{c.count} pièces disponibles →</div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
           ))}
         </div>
       </div>

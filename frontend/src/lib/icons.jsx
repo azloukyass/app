@@ -148,6 +148,42 @@ export const RoofIcon = ({ className = "w-8 h-8", stroke = "currentColor" }) => 
   </svg>
 );
 
+export const FusesIcon = ({ className = "w-8 h-8", stroke = "currentColor" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="10" y="22" width="10" height="20" rx="1" />
+    <rect x="22" y="18" width="10" height="24" rx="1" />
+    <rect x="34" y="22" width="10" height="20" rx="1" />
+    <rect x="46" y="18" width="10" height="24" rx="1" />
+    <path d="M15 16v6M27 12v6M39 16v6M51 12v6M15 42v6M27 42v6M39 42v6M51 42v6" />
+  </svg>
+);
+
+export const InfoIcon = ({ className = "w-8 h-8", stroke = "currentColor" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="10" y="14" width="44" height="36" rx="3" />
+    <path d="M18 24h28M18 32h28M18 40h18" />
+    <circle cx="48" cy="40" r="3" fill={stroke} stroke="none" />
+  </svg>
+);
+
+export const SeatIcon = ({ className = "w-8 h-8", stroke = "currentColor" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 50h20M20 50V30c0-4 4-8 8-8h6v18" />
+    <path d="M34 30h6c4 0 8 4 8 8v8h-6" />
+    <path d="M16 50v4M36 50v4" />
+  </svg>
+);
+
+export const CarSideIcon = ({ className = "w-8 h-8", stroke = "currentColor" }) => (
+  <svg viewBox="0 0 64 64" className={className} fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 44l4-14 8-6h28l8 6 4 14v6H6z" />
+    <circle cx="18" cy="50" r="4" />
+    <circle cx="46" cy="50" r="4" />
+    <path d="M18 24l4-8h20l4 8" />
+    <path d="M30 16v10" />
+  </svg>
+);
+
 export const IconByKey = {
   engine: EngineIcon,
   gearbox: GearboxIcon,
@@ -166,6 +202,12 @@ export const IconByKey = {
   mirror: MirrorIcon,
   roof: RoofIcon,
   "car-body": CarFrontIcon,
+  "car-front": CarFrontIcon,
+  "car-back": CarBackIcon,
+  "car-side": CarSideIcon,
+  fuses: FusesIcon,
+  info: InfoIcon,
+  seat: SeatIcon,
 };
 
 export function CategoryIcon({ name, className = "w-10 h-10", stroke = "currentColor" }) {

@@ -1,120 +1,9 @@
 """
 BENNOURI Pièces Auto — Catalogue de pièces détachées.
-Structure: section -> category -> parts list.
-Sections: mecanique, electrique, carrosserie.
-Prix en TND (Dinar Tunisien).
+Structure: section -> category (avec sub_items inline) -> parts list.
 """
 
-# Reliable Pexels image URLs. Each category image matches its real-world subject.
 PEX = lambda i: f"https://images.pexels.com/photos/{i}/pexels-photo-{i}.jpeg?auto=compress&cs=tinysrgb&w=800"
-
-# Category background images (one per subcategory)
-CAT_IMG = {
-    # Mécanique
-    "moteur": PEX(4489732),          # mechanic on engine block
-    "boite-vitesses": PEX(13065690), # gearbox-style engine bay
-    "transmission": PEX(2244746),    # underbody engine / mechanics
-    "suspension": PEX(4480456),      # car undercarriage
-    "direction": PEX(3807345),       # steering wheel / cockpit
-    "freinage": PEX(1545743),        # brake disc / alloy wheel
-    # Électrique
-    "batterie-demarrage": PEX(190574),   # battery / charging
-    "eclairage": PEX(2127733),           # car headlight close-up
-    "faisceaux": PEX(4480455),           # wiring / engine harness
-    "lavage-essuyage": PEX(919073),      # car w/ visible windshield
-    "securite": PEX(244553),             # car door / alarm
-    # Carrosserie
-    "partie-avant": PEX(919073),         # front bumper / grille
-    "partie-arriere": PEX(112460),       # rear of vehicle
-    "portes": PEX(1638459),              # white car body / doors
-    "retroviseurs": PEX(100650),         # side mirror close-up
-    "pavillon": PEX(1429775),            # car roof / pavilion
-}
-
-# Part images grouped by family — each image visually matches the part type.
-IMG = {
-    # Engine parts
-    "filtre_huile":   PEX(13070069),
-    "filtre_air":     PEX(13070069),
-    "courroie":       PEX(2244746),
-    "pompe_eau":      PEX(190574),
-    "bougie":         PEX(190574),
-    "joint_culasse":  PEX(4489732),
-    "moteur_bloc":    PEX(4489732),
-    # Boîte de vitesses
-    "embrayage":      PEX(13065690),
-    "boite":          PEX(13065690),
-    "cable_vitesses": PEX(2244746),
-    "huile_boite":    PEX(13070069),
-    "volant_moteur":  PEX(13065690),
-    # Transmission
-    "cardan":         PEX(2244746),
-    "soufflet":       PEX(2244746),
-    "roulement":      PEX(1545743),
-    "pneu":           PEX(1545743),
-    # Suspension
-    "amortisseur":    PEX(4480456),
-    "ressort":        PEX(4480456),
-    "rotule":         PEX(4480456),
-    "barre_stab":     PEX(4480456),
-    # Direction
-    "cremaillere":    PEX(3807345),
-    "pompe_da":       PEX(3807345),
-    "biellette":      PEX(3807345),
-    "colonne_dir":    PEX(3807345),
-    # Freinage
-    "disque_frein":   PEX(1545743),
-    "plaquettes":     PEX(1545743),
-    "etrier":         PEX(1545743),
-    "liquide_frein":  PEX(13070069),
-    # Batterie / démarrage
-    "batterie":       PEX(190574),
-    "demarreur":      PEX(190574),
-    "alternateur":    PEX(190574),
-    # Éclairage
-    "phare":          PEX(2127733),
-    "feu_arriere":    PEX(112460),
-    "ampoule":        PEX(2127733),
-    "antibrouillard": PEX(2127733),
-    # Faisceaux
-    "fusible":        PEX(4480455),
-    "faisceau":       PEX(4480455),
-    "boitier_fus":    PEX(4480455),
-    "sonde":          PEX(4480455),
-    # Lavage / Essuyage
-    "essuie_glace":   PEX(919073),
-    "moteur_essuie":  PEX(919073),
-    "pompe_lg":       PEX(919073),
-    # Sécurité / Confort
-    "alarme":         PEX(244553),
-    "leve_vitre":     PEX(1638459),
-    "klaxon":         PEX(244553),
-    # Carrosserie - avant
-    "pare_choc_av":   PEX(919073),
-    "capot":          PEX(919073),
-    "aile":           PEX(919073),
-    "calandre":       PEX(919073),
-    "pare_brise":     PEX(919073),
-    # Carrosserie - arrière
-    "pare_choc_ar":   PEX(112460),
-    "hayon":          PEX(112460),
-    "lunette":        PEX(112460),
-    "serrure":        PEX(112460),
-    # Portes
-    "porte":          PEX(1638459),
-    "vitre":          PEX(1638459),
-    "poignee":        PEX(1638459),
-    "garniture_porte":PEX(1638459),
-    # Rétroviseurs
-    "retro_ext":      PEX(100650),
-    "retro_int":      PEX(100650),
-    "verre_retro":    PEX(100650),
-    # Pavillon
-    "pavillon":       PEX(1429775),
-    "toit_ouvrant":   PEX(1429775),
-    "antenne":        PEX(1429775),
-    "barres_toit":    PEX(1429775),
-}
 
 
 def _p(ref: str, name: str, price: float, brand: str, img: str, desc: str = ""):
@@ -139,220 +28,356 @@ CATALOG = {
                 "slug": "moteur",
                 "label": "Moteur",
                 "icon": "engine",
-                "image": CAT_IMG["moteur"],
+                "image": PEX(4489732),
+                "sub_items": [
+                    "Groupe moteur", "Bloc moteur", "Vilebrequin", "Culasse",
+                    "Distribution", "Lubrification", "Refroidissement", "Alimentation",
+                    "Échappement", "Antipollution", "Allumage", "Suralimentation",
+                ],
                 "parts": [
-                    _p("MOT-1001", "Filtre à huile premium", 18.500, "MANN-FILTER", IMG["filtre_huile"]),
-                    _p("MOT-1002", "Courroie de distribution", 89.900, "GATES", IMG["courroie"]),
-                    _p("MOT-1003", "Pompe à eau", 145.000, "VALEO", IMG["pompe_eau"]),
-                    _p("MOT-1004", "Filtre à air sport", 32.000, "K&N", IMG["filtre_air"]),
-                    _p("MOT-1005", "Bougies d'allumage (x4)", 64.000, "NGK", IMG["bougie"]),
-                    _p("MOT-1006", "Joint de culasse", 210.000, "ELRING", IMG["joint_culasse"]),
+                    _p("MOT-1001", "Filtre à huile premium", 18.500, "MANN-FILTER", PEX(4489732)),
+                    _p("MOT-1002", "Courroie de distribution", 89.900, "GATES", PEX(2244746)),
+                    _p("MOT-1003", "Pompe à eau", 145.000, "VALEO", PEX(190574)),
+                    _p("MOT-1004", "Filtre à air sport", 32.000, "K&N", PEX(13070069)),
+                    _p("MOT-1005", "Bougies d'allumage (x4)", 64.000, "NGK", PEX(190574)),
+                    _p("MOT-1006", "Joint de culasse", 210.000, "ELRING", PEX(4489732)),
                 ],
             },
             {
                 "slug": "boite-vitesses",
-                "label": "Boîte de vitesses",
+                "label": "Ensemble boîte de vitesses",
                 "icon": "gearbox",
-                "image": CAT_IMG["boite-vitesses"],
+                "image": PEX(13065690),
+                "sub_items": ["Embrayage", "Boîte de vitesses", "Commande de vitesses"],
                 "parts": [
-                    _p("BV-2001", "Kit embrayage complet", 420.000, "LUK", IMG["embrayage"]),
-                    _p("BV-2002", "Volant moteur bi-masse", 680.000, "SACHS", IMG["volant_moteur"]),
-                    _p("BV-2003", "Câble de commande de vitesses", 95.000, "FEBI", IMG["cable_vitesses"]),
-                    _p("BV-2004", "Huile boîte 75W-90 (1L)", 38.500, "MOTUL", IMG["huile_boite"]),
+                    _p("BV-2001", "Kit embrayage complet", 420.000, "LUK", PEX(13065690)),
+                    _p("BV-2002", "Volant moteur bi-masse", 680.000, "SACHS", PEX(13065690)),
+                    _p("BV-2003", "Câble de commande de vitesses", 95.000, "FEBI", PEX(2244746)),
+                    _p("BV-2004", "Huile boîte 75W-90 (1L)", 38.500, "MOTUL", PEX(13070069)),
                 ],
             },
             {
                 "slug": "transmission",
                 "label": "Transmission",
                 "icon": "transmission",
-                "image": CAT_IMG["transmission"],
+                "image": PEX(2244746),
+                "sub_items": ["Boîte transfert", "Pont arrière", "Transmissions", "Roues", "Pneumatiques"],
                 "parts": [
-                    _p("TR-3001", "Cardan complet avant gauche", 285.000, "GKN", IMG["cardan"]),
-                    _p("TR-3002", "Cardan complet avant droit", 285.000, "GKN", IMG["cardan"]),
-                    _p("TR-3003", "Kit soufflet de cardan", 28.000, "FEBI", IMG["soufflet"]),
-                    _p("TR-3004", "Roulement de roue avant", 78.000, "SKF", IMG["roulement"]),
-                    _p("TR-3005", "Pneumatique 195/65 R15", 165.000, "MICHELIN", IMG["pneu"]),
+                    _p("TR-3001", "Cardan complet avant gauche", 285.000, "GKN", PEX(2244746)),
+                    _p("TR-3002", "Cardan complet avant droit", 285.000, "GKN", PEX(2244746)),
+                    _p("TR-3003", "Kit soufflet de cardan", 28.000, "FEBI", PEX(2244746)),
+                    _p("TR-3004", "Roulement de roue avant", 78.000, "SKF", PEX(1545743)),
+                    _p("TR-3005", "Pneumatique 195/65 R15", 165.000, "MICHELIN", PEX(1545743)),
                 ],
             },
             {
                 "slug": "suspension",
-                "label": "Suspension",
+                "label": "Ensemble suspension",
                 "icon": "suspension",
-                "image": CAT_IMG["suspension"],
+                "image": PEX(4480456),
+                "sub_items": [
+                    "Suspension", "Essieu avant", "Ressorts avant", "Amortisseurs avant",
+                    "Barre antidévers avant", "Essieu arrière", "Ressorts arrière", "Amortisseurs arrière",
+                ],
                 "parts": [
-                    _p("SP-4001", "Amortisseur avant (paire)", 280.000, "BILSTEIN", IMG["amortisseur"]),
-                    _p("SP-4002", "Amortisseur arrière (paire)", 245.000, "BILSTEIN", IMG["amortisseur"]),
-                    _p("SP-4003", "Ressort de suspension avant", 110.000, "KYB", IMG["ressort"]),
-                    _p("SP-4004", "Rotule de suspension", 45.000, "TRW", IMG["rotule"]),
-                    _p("SP-4005", "Barre stabilisatrice", 135.000, "FEBI", IMG["barre_stab"]),
+                    _p("SP-4001", "Amortisseur avant (paire)", 280.000, "BILSTEIN", PEX(4480456)),
+                    _p("SP-4002", "Amortisseur arrière (paire)", 245.000, "BILSTEIN", PEX(4480456)),
+                    _p("SP-4003", "Ressort de suspension avant", 110.000, "KYB", PEX(4480456)),
+                    _p("SP-4004", "Rotule de suspension", 45.000, "TRW", PEX(4480456)),
+                    _p("SP-4005", "Barre stabilisatrice", 135.000, "FEBI", PEX(4480456)),
                 ],
             },
             {
                 "slug": "direction",
                 "label": "Direction",
                 "icon": "steering",
-                "image": CAT_IMG["direction"],
+                "image": PEX(3807345),
+                "sub_items": [
+                    "Volant et commandes sous volant", "Colonne de direction", "Antivol",
+                    "Crémaillère", "Direction assistée",
+                ],
                 "parts": [
-                    _p("DR-5001", "Crémaillère de direction", 580.000, "TRW", IMG["cremaillere"]),
-                    _p("DR-5002", "Pompe direction assistée", 320.000, "BOSCH", IMG["pompe_da"]),
-                    _p("DR-5003", "Biellette de direction", 38.000, "MOOG", IMG["biellette"]),
-                    _p("DR-5004", "Colonne de direction", 410.000, "FEBI", IMG["colonne_dir"]),
+                    _p("DR-5001", "Crémaillère de direction", 580.000, "TRW", PEX(3807345)),
+                    _p("DR-5002", "Pompe direction assistée", 320.000, "BOSCH", PEX(190574)),
+                    _p("DR-5003", "Biellette de direction", 38.000, "MOOG", PEX(4480456)),
+                    _p("DR-5004", "Colonne de direction", 410.000, "FEBI", PEX(3807345)),
                 ],
             },
             {
                 "slug": "freinage",
                 "label": "Freinage",
                 "icon": "brake",
-                "image": CAT_IMG["freinage"],
+                "image": PEX(1545743),
+                "sub_items": [
+                    "Freins avant", "Freins arrière", "Canalisations", "Compensateur",
+                    "Assistance de freinage", "Maître-cylindre", "Frein de stationnement",
+                    "Pédalier", "ABS/ASR/ESP",
+                ],
                 "parts": [
-                    _p("FR-6001", "Disques de frein avant (paire)", 165.000, "BREMBO", IMG["disque_frein"]),
-                    _p("FR-6002", "Plaquettes avant", 78.000, "FERODO", IMG["plaquettes"]),
-                    _p("FR-6003", "Disques de frein arrière (paire)", 145.000, "BREMBO", IMG["disque_frein"]),
-                    _p("FR-6004", "Plaquettes arrière", 62.000, "FERODO", IMG["plaquettes"]),
-                    _p("FR-6005", "Étrier de frein avant", 240.000, "ATE", IMG["etrier"]),
-                    _p("FR-6006", "Liquide de frein DOT 4 (1L)", 22.000, "BOSCH", IMG["liquide_frein"]),
+                    _p("FR-6001", "Disques de frein avant (paire)", 165.000, "BREMBO", PEX(1545743)),
+                    _p("FR-6002", "Plaquettes avant", 78.000, "FERODO", PEX(1545743)),
+                    _p("FR-6003", "Disques de frein arrière (paire)", 145.000, "BREMBO", PEX(1545743)),
+                    _p("FR-6004", "Plaquettes arrière", 62.000, "FERODO", PEX(1545743)),
+                    _p("FR-6005", "Étrier de frein avant", 240.000, "ATE", PEX(1545743)),
+                    _p("FR-6006", "Liquide de frein DOT 4 (1L)", 22.000, "BOSCH", PEX(13070069)),
                 ],
             },
         ],
     },
     "electrique": {
         "label": "Électrique",
-        "icon": "battery",
-        "description": "Batterie, démarrage, éclairage et électronique embarquée.",
+        "icon": "fuses",
+        "description": "Batterie, démarrage, éclairage, électronique embarquée et confort.",
         "categories": [
             {
-                "slug": "batterie-demarrage",
-                "label": "Batterie & Démarrage",
-                "icon": "battery",
-                "image": CAT_IMG["batterie-demarrage"],
+                "slug": "generalites",
+                "label": "Généralités",
+                "icon": "fuses",
+                "image": PEX(4480455),
+                "sub_items": [
+                    "Affectation des fusibles", "Prises / bornes / connecteurs", "Épissures",
+                    "Interconnexions", "Implantations", "Boîtiers / platines / coffrets", "Divers",
+                ],
                 "parts": [
-                    _p("EL-7001", "Batterie 60Ah 540A", 240.000, "VARTA", IMG["batterie"]),
-                    _p("EL-7002", "Batterie 70Ah 760A", 295.000, "BOSCH", IMG["batterie"]),
-                    _p("EL-7003", "Démarreur 1.2kW", 380.000, "VALEO", IMG["demarreur"]),
-                    _p("EL-7004", "Alternateur 110A", 420.000, "DENSO", IMG["alternateur"]),
-                    _p("EL-7005", "Bougie de préchauffage (x4)", 68.000, "NGK", IMG["bougie"]),
+                    _p("EL-9001", "Kit de fusibles complet", 28.000, "FEBI", PEX(4480455)),
+                    _p("EL-9003", "Boîtier de fusibles", 180.000, "BOSCH", PEX(4480455)),
                 ],
             },
             {
-                "slug": "eclairage",
-                "label": "Éclairage & Signalisation",
-                "icon": "headlight",
-                "image": CAT_IMG["eclairage"],
+                "slug": "electricite-moteur",
+                "label": "Électricité moteur",
+                "icon": "battery",
+                "image": PEX(190574),
+                "sub_items": [
+                    "Démarrage", "Génération de courant", "Préchauffage", "Batterie", "Batterie de traction",
+                ],
                 "parts": [
-                    _p("EL-8001", "Phare avant LED gauche", 480.000, "HELLA", IMG["phare"]),
-                    _p("EL-8002", "Phare avant LED droit", 480.000, "HELLA", IMG["phare"]),
-                    _p("EL-8003", "Feu arrière gauche", 145.000, "VALEO", IMG["feu_arriere"]),
-                    _p("EL-8004", "Feu arrière droit", 145.000, "VALEO", IMG["feu_arriere"]),
-                    _p("EL-8005", "Kit ampoules H7 LED", 95.000, "OSRAM", IMG["ampoule"]),
-                    _p("EL-8006", "Antibrouillard avant", 110.000, "HELLA", IMG["antibrouillard"]),
+                    _p("EL-7001", "Batterie 60Ah 540A", 240.000, "VARTA", PEX(190574)),
+                    _p("EL-7002", "Batterie 70Ah 760A", 295.000, "BOSCH", PEX(190574)),
+                    _p("EL-7003", "Démarreur 1.2kW", 380.000, "VALEO", PEX(190574)),
+                    _p("EL-7004", "Alternateur 110A", 420.000, "DENSO", PEX(190574)),
+                    _p("EL-7005", "Bougie de préchauffage (x4)", 68.000, "NGK", PEX(190574)),
                 ],
             },
             {
                 "slug": "faisceaux",
-                "label": "Faisceaux & Connectique",
+                "label": "Faisceaux électriques",
                 "icon": "wiring",
-                "image": CAT_IMG["faisceaux"],
+                "image": PEX(4480455),
+                "sub_items": [
+                    "Connectique", "Faisceaux avant", "Faisceaux centraux",
+                    "Faisceaux arrière", "Câble haute tension / 12V",
+                ],
                 "parts": [
-                    _p("EL-9001", "Kit de fusibles complet", 28.000, "FEBI", IMG["fusible"]),
-                    _p("EL-9002", "Faisceau avant moteur", 320.000, "DELPHI", IMG["faisceau"]),
-                    _p("EL-9003", "Boîtier de fusibles", 180.000, "BOSCH", IMG["boitier_fus"]),
-                    _p("EL-9004", "Sonde lambda", 145.000, "BOSCH", IMG["sonde"]),
+                    _p("EL-9002", "Faisceau avant moteur", 320.000, "DELPHI", PEX(4480455)),
+                    _p("EL-9004", "Sonde lambda", 145.000, "BOSCH", PEX(4480455)),
+                ],
+            },
+            {
+                "slug": "eclairage",
+                "label": "Éclairage - signalisation",
+                "icon": "headlight",
+                "image": PEX(2127733),
+                "sub_items": [
+                    "Éclairage intérieur", "Éclairage extérieur", "Signalisation", "Commandes sous volant",
+                ],
+                "parts": [
+                    _p("EL-8001", "Phare avant LED gauche", 480.000, "HELLA", PEX(2127733)),
+                    _p("EL-8002", "Phare avant LED droit", 480.000, "HELLA", PEX(2127733)),
+                    _p("EL-8003", "Feu arrière gauche", 145.000, "VALEO", PEX(112460)),
+                    _p("EL-8004", "Feu arrière droit", 145.000, "VALEO", PEX(112460)),
+                    _p("EL-8005", "Kit ampoules H7 LED", 95.000, "OSRAM", PEX(2127733)),
+                    _p("EL-8006", "Antibrouillard avant", 110.000, "HELLA", PEX(2127733)),
+                ],
+            },
+            {
+                "slug": "informations-conducteur",
+                "label": "Informations conducteur",
+                "icon": "info",
+                "image": PEX(3807345),
+                "sub_items": [
+                    "Combiné", "Messages, sons et témoins éclairage - signalisation",
+                    "Messages, sons et témoins groupe motopropulseur",
+                    "Messages, sons et témoins protections et ouvrants",
+                    "Messages, sons et témoins poste de conduite",
+                    "Messages, sons et témoins aide à la conduite",
+                    "Messages, sons et témoins lavage et essuyage",
+                    "Messages, sons et témoins confort et vie à bord",
+                    "Messages, sons et témoins accessoires", "Systèmes d'affichage",
+                ],
+                "parts": [
+                    _p("EL-IC-001", "Combiné d'instruments", 380.000, "VDO", PEX(3807345)),
+                    _p("EL-IC-002", "Écran multifonction central", 520.000, "VALEO", PEX(3807345)),
+                    _p("EL-IC-003", "Avertisseur sonore (klaxon)", 48.000, "BOSCH", PEX(4480455)),
                 ],
             },
             {
                 "slug": "lavage-essuyage",
-                "label": "Lavage & Essuyage",
+                "label": "Lavage et essuyage",
                 "icon": "wiper",
-                "image": CAT_IMG["lavage-essuyage"],
+                "image": PEX(919073),
+                "sub_items": ["Lavage", "Essuyage", "Commandes sous volant"],
                 "parts": [
-                    _p("EL-10001", "Balais d'essuie-glace (paire)", 42.000, "BOSCH", IMG["essuie_glace"]),
-                    _p("EL-10002", "Moteur essuie-glace avant", 195.000, "VALEO", IMG["moteur_essuie"]),
-                    _p("EL-10003", "Pompe lave-glace", 38.000, "FEBI", IMG["pompe_lg"]),
-                    _p("EL-10004", "Balai essuie-glace arrière", 18.500, "BOSCH", IMG["essuie_glace"]),
+                    _p("EL-10001", "Balais d'essuie-glace (paire)", 42.000, "BOSCH", PEX(919073)),
+                    _p("EL-10002", "Moteur essuie-glace avant", 195.000, "VALEO", PEX(919073)),
+                    _p("EL-10003", "Pompe lave-glace", 38.000, "FEBI", PEX(919073)),
+                    _p("EL-10004", "Balai essuie-glace arrière", 18.500, "BOSCH", PEX(919073)),
                 ],
             },
             {
-                "slug": "securite",
-                "label": "Sécurité & Confort",
+                "slug": "protections-ouvrants",
+                "label": "Protections et ouvrants",
                 "icon": "alarm",
-                "image": CAT_IMG["securite"],
+                "image": PEX(244553),
+                "sub_items": [
+                    "Antidémarrage", "Alarme", "Verrouillage / déverrouillage",
+                    "Porte latérale coulissante", "Lève-vitres", "Coffre motorisé",
+                    "Ceintures de sécurité", "Coussins gonflables", "Choc piéton", "Toit / rideau",
+                ],
                 "parts": [
-                    _p("EL-11001", "Alarme antivol universelle", 240.000, "COBRA", IMG["alarme"]),
-                    _p("EL-11002", "Moteur lève-vitre avant", 165.000, "VALEO", IMG["leve_vitre"]),
-                    _p("EL-11003", "Centrale clignotants", 35.000, "HELLA", IMG["fusible"]),
-                    _p("EL-11004", "Klaxon double tonalité", 48.000, "BOSCH", IMG["klaxon"]),
+                    _p("EL-11001", "Alarme antivol universelle", 240.000, "COBRA", PEX(244553)),
+                    _p("EL-11002", "Moteur lève-vitre avant", 165.000, "VALEO", PEX(1638459)),
+                    _p("EL-11003", "Centrale clignotants", 35.000, "HELLA", PEX(4480455)),
+                    _p("EL-PO-004", "Ceinture de sécurité avant", 95.000, "TRW", PEX(244553)),
+                ],
+            },
+            {
+                "slug": "poste-conduite",
+                "label": "Poste de conduite",
+                "icon": "seat",
+                "image": PEX(3807345),
+                "sub_items": [
+                    "Rétroviseurs", "Colonne de direction", "Sièges",
+                    "Mémorisation poste de conduite", "Commandes sous volant",
+                ],
+                "parts": [
+                    _p("EL-PC-001", "Rétroviseur intérieur jour/nuit", 45.000, "OEM", PEX(100650)),
+                    _p("EL-PC-002", "Module mémorisation siège", 280.000, "OEM", PEX(3807345)),
+                    _p("EL-PC-003", "Commodo sous volant gauche", 95.000, "VALEO", PEX(3807345)),
                 ],
             },
         ],
     },
     "carrosserie": {
         "label": "Carrosserie",
-        "icon": "car-body",
-        "description": "Pare-chocs, ailes, capots, vitres et pièces de carrosserie.",
+        "icon": "car-front",
+        "description": "Pare-chocs, ailes, capots, portes, vitres et pièces de carrosserie.",
         "categories": [
             {
                 "slug": "partie-avant",
                 "label": "Partie avant",
-                "icon": "front",
-                "image": CAT_IMG["partie-avant"],
+                "icon": "car-front",
+                "image": PEX(919073),
+                "sub_items": [
+                    "Pare-chocs avant", "Façade", "Aile avant", "Capot", "Pare-brise",
+                    "Traverse", "Calandre", "Berceau", "Brancard", "Plancher avant",
+                    "Protection sous caisse", "Insonorisant",
+                ],
                 "parts": [
-                    _p("CR-12001", "Pare-chocs avant", 380.000, "OEM", IMG["pare_choc_av"]),
-                    _p("CR-12002", "Capot moteur", 520.000, "OEM", IMG["capot"]),
-                    _p("CR-12003", "Aile avant gauche", 165.000, "OEM", IMG["aile"]),
-                    _p("CR-12004", "Aile avant droite", 165.000, "OEM", IMG["aile"]),
-                    _p("CR-12005", "Calandre chromée", 95.000, "OEM", IMG["calandre"]),
-                    _p("CR-12006", "Pare-brise feuilleté", 420.000, "SAINT-GOBAIN", IMG["pare_brise"]),
+                    _p("CR-12001", "Pare-chocs avant", 380.000, "OEM", PEX(919073)),
+                    _p("CR-12002", "Capot moteur", 520.000, "OEM", PEX(919073)),
+                    _p("CR-12003", "Aile avant gauche", 165.000, "OEM", PEX(919073)),
+                    _p("CR-12004", "Aile avant droite", 165.000, "OEM", PEX(919073)),
+                    _p("CR-12005", "Calandre chromée", 95.000, "OEM", PEX(919073)),
+                    _p("CR-12006", "Pare-brise feuilleté", 420.000, "SAINT-GOBAIN", PEX(919073)),
                 ],
             },
             {
                 "slug": "partie-arriere",
                 "label": "Partie arrière",
-                "icon": "back",
-                "image": CAT_IMG["partie-arriere"],
+                "icon": "car-back",
+                "image": PEX(112460),
+                "sub_items": [
+                    "Pare-chocs arrière", "Plancher arrière", "Cloison de cabine / séparation arrière",
+                    "Volet / porte", "Aile arrière", "Lunette", "Soubassement", "Custode",
+                    "Garniture", "Serrure", "Monogramme", "Attelage de remorque et faisceaux",
+                ],
                 "parts": [
-                    _p("CR-13001", "Pare-chocs arrière", 340.000, "OEM", IMG["pare_choc_ar"]),
-                    _p("CR-13002", "Hayon arrière", 580.000, "OEM", IMG["hayon"]),
-                    _p("CR-13003", "Aile arrière gauche", 195.000, "OEM", IMG["aile"]),
-                    _p("CR-13004", "Lunette arrière", 280.000, "SAINT-GOBAIN", IMG["lunette"]),
-                    _p("CR-13005", "Serrure de hayon", 78.000, "FEBI", IMG["serrure"]),
+                    _p("CR-13001", "Pare-chocs arrière", 340.000, "OEM", PEX(112460)),
+                    _p("CR-13002", "Hayon arrière", 580.000, "OEM", PEX(112460)),
+                    _p("CR-13003", "Aile arrière gauche", 195.000, "OEM", PEX(919073)),
+                    _p("CR-13004", "Lunette arrière", 280.000, "SAINT-GOBAIN", PEX(112460)),
+                    _p("CR-13005", "Serrure de hayon", 78.000, "FEBI", PEX(244553)),
                 ],
             },
             {
-                "slug": "portes",
-                "label": "Portes & Vitres",
+                "slug": "partie-laterale",
+                "label": "Partie latérale",
+                "icon": "car-side",
+                "image": PEX(1638459),
+                "sub_items": [
+                    "Pied avant", "Bas de caisse", "Pied central",
+                    "Panneau de coté", "Vitre latérale fixe",
+                ],
+                "parts": [
+                    _p("CR-PL-001", "Bas de caisse gauche", 145.000, "OEM", PEX(1638459)),
+                    _p("CR-PL-002", "Bas de caisse droit", 145.000, "OEM", PEX(1638459)),
+                    _p("CR-PL-003", "Panneau de côté", 220.000, "OEM", PEX(1638459)),
+                    _p("CR-PL-004", "Vitre latérale fixe", 95.000, "SAINT-GOBAIN", PEX(1638459)),
+                ],
+            },
+            {
+                "slug": "portes-avant",
+                "label": "Portes avant et garnissage",
                 "icon": "door",
-                "image": CAT_IMG["portes"],
+                "image": PEX(1638459),
+                "sub_items": [
+                    "Portes avant", "Vitres de porte avant", "Commande de porte avant",
+                    "Garnissage de porte avant", "Rétroviseurs",
+                ],
                 "parts": [
-                    _p("CR-14001", "Porte avant gauche", 480.000, "OEM", IMG["porte"]),
-                    _p("CR-14002", "Porte avant droite", 480.000, "OEM", IMG["porte"]),
-                    _p("CR-14003", "Vitre de porte avant", 145.000, "SAINT-GOBAIN", IMG["vitre"]),
-                    _p("CR-14004", "Poignée extérieure", 38.000, "FEBI", IMG["poignee"]),
-                    _p("CR-14005", "Garniture de porte", 165.000, "OEM", IMG["garniture_porte"]),
+                    _p("CR-14001", "Porte avant gauche", 480.000, "OEM", PEX(1638459)),
+                    _p("CR-14002", "Porte avant droite", 480.000, "OEM", PEX(1638459)),
+                    _p("CR-14003", "Vitre de porte avant", 145.000, "SAINT-GOBAIN", PEX(1638459)),
+                    _p("CR-14004", "Poignée extérieure", 38.000, "FEBI", PEX(244553)),
+                    _p("CR-14005", "Garniture de porte", 165.000, "OEM", PEX(1638459)),
+                    _p("CR-15001", "Rétroviseur extérieur gauche", 195.000, "OEM", PEX(100650)),
+                    _p("CR-15002", "Rétroviseur extérieur droit", 195.000, "OEM", PEX(100650)),
                 ],
             },
             {
-                "slug": "retroviseurs",
-                "label": "Rétroviseurs",
-                "icon": "mirror",
-                "image": CAT_IMG["retroviseurs"],
+                "slug": "portes-arriere",
+                "label": "Portes arrière et garnissage",
+                "icon": "door",
+                "image": PEX(1638459),
+                "sub_items": [
+                    "Portes arrière", "Vitres de porte arrière",
+                    "Commande de porte arrière", "Garnissage de porte arrière",
+                ],
                 "parts": [
-                    _p("CR-15001", "Rétroviseur extérieur gauche", 195.000, "OEM", IMG["retro_ext"]),
-                    _p("CR-15002", "Rétroviseur extérieur droit", 195.000, "OEM", IMG["retro_ext"]),
-                    _p("CR-15003", "Coque de rétroviseur", 28.000, "OEM", IMG["retro_ext"]),
-                    _p("CR-15004", "Verre de rétroviseur", 18.500, "FEBI", IMG["verre_retro"]),
-                    _p("CR-15005", "Rétroviseur intérieur", 45.000, "OEM", IMG["retro_int"]),
+                    _p("CR-PA-001", "Porte arrière gauche", 460.000, "OEM", PEX(1638459)),
+                    _p("CR-PA-002", "Porte arrière droite", 460.000, "OEM", PEX(1638459)),
+                    _p("CR-PA-003", "Vitre de porte arrière", 135.000, "SAINT-GOBAIN", PEX(1638459)),
+                    _p("CR-PA-004", "Garnissage porte arrière", 155.000, "OEM", PEX(1638459)),
                 ],
             },
             {
                 "slug": "pavillon",
-                "label": "Pavillon & Toit",
+                "label": "Ensemble pavillon et garnissage",
                 "icon": "roof",
-                "image": CAT_IMG["pavillon"],
+                "image": PEX(1429775),
+                "sub_items": [
+                    "Pavillon", "Arc de pavillon", "Garnitures du pavillon", "Toit ouvrant / capote",
+                ],
                 "parts": [
-                    _p("CR-16001", "Garniture de pavillon", 240.000, "OEM", IMG["pavillon"]),
-                    _p("CR-16002", "Mécanisme toit ouvrant", 580.000, "OEM", IMG["toit_ouvrant"]),
-                    _p("CR-16003", "Antenne de toit", 38.000, "HIRSCHMANN", IMG["antenne"]),
-                    _p("CR-16004", "Barres de toit", 165.000, "THULE", IMG["barres_toit"]),
+                    _p("CR-16001", "Garniture de pavillon", 240.000, "OEM", PEX(1429775)),
+                    _p("CR-16002", "Mécanisme toit ouvrant", 580.000, "OEM", PEX(1429775)),
+                    _p("CR-16003", "Antenne de toit", 38.000, "HIRSCHMANN", PEX(1429775)),
+                    _p("CR-16004", "Barres de toit", 165.000, "THULE", PEX(1429775)),
+                ],
+            },
+            {
+                "slug": "caisse",
+                "label": "Caisse",
+                "icon": "car-body",
+                "image": PEX(1638459),
+                "sub_items": [
+                    "Caisse nue", "Obturateurs de caisse", "Plateau-cabine", "Personnalisation",
+                ],
+                "parts": [
+                    _p("CR-CA-001", "Obturateur de caisse", 28.000, "OEM", PEX(1638459)),
+                    _p("CR-CA-002", "Plateau cabine", 320.000, "OEM", PEX(1638459)),
+                    _p("CR-CA-003", "Kit personnalisation", 180.000, "OEM", PEX(1638459)),
                 ],
             },
         ],

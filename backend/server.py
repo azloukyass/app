@@ -221,6 +221,7 @@ async def get_section_api(section: str):
                 "label": c["label"],
                 "icon": c["icon"],
                 "image": c["image"],
+                "sub_items": c.get("sub_items", []),
                 "count": len(c["parts"]),
             }
             for c in data["categories"]
