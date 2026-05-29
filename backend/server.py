@@ -21,6 +21,7 @@ from pydantic import BaseModel, EmailStr
 from catalog_data import CATALOG, get_section, get_category, find_part
 from vehicles_catalog import get_catalog as get_vehicles_catalog, VEHICLES
 from partsouq_scraper import scrape_vin as partsouq_scrape, scrape_subgroup_parts
+from fadpro_client import search_reference as fadpro_search
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -502,6 +503,20 @@ async def partsouq_subgroup_cached(vin: str, cid: str):
     if not cached:
         raise HTTPException(404, "Sous-catégorie non disponible (lancez d'abord la récupération)")
     return cached
+
+
+@api.get("/fadpro/search")
+async def fadpro_search_endpoint(ref: str = "", user: dict = Depends(get_current_user)):
+    """Search FadPro by reference origin (refFour). Authenticated users only.
+    Prices are adjusted: prix_origine × 1.19 + 50 DT."""
+    ref = (ref or "").strip()
+    if len(ref) < 2:
+        raise HTTPException(400, "Référence trop courte (min. 2 caractères)")
+    try:
+        items = await fadpro_search(ref)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e))
+    return {"reference": ref, "count": len(items), "items": items}
 
 
 class ManualVehicleIn(BaseModel):

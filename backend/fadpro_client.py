@@ -1,0 +1,121 @@
+"""
+FadPro.tn B2B partner integration.
+- Login once per session, cache JWT in-memory (token expires ~12h)
+- Search by reference origin: GET /fad/api/b2b/search?refFour=...
+- Apply price markup: prix * (1 + 0.19) + 50 DT
+"""
+
+import os
+import time
+import logging
+from typing import Optional, List, Dict
+
+import httpx
+
+logger = logging.getLogger(__name__)
+
+FADPRO_BASE = os.environ.get("FADPRO_BASE_URL", "https://fadpro.tn:8095")
+FADPRO_USER = os.environ.get("FADPRO_USER", "5428")
+FADPRO_PASS = os.environ.get("FADPRO_PASSWORD", "wk5428fad*/*")
+PRICE_MARKUP_VAT = 0.19       # +19%
+PRICE_FIXED_FEE = 50.0        # +50 TND
+
+# In-memory cache for token (single FastAPI worker)
+_token_cache = {"token": None, "expires_at": 0}
+
+
+async def _get_token(force: bool = False) -> Optional[str]:
+    """Get FadPro auth token, refresh if expired (or forced)."""
+    now = time.time()
+    if not force and _token_cache["token"] and _token_cache["expires_at"] > now + 60:
+        return _token_cache["token"]
+
+    url = f"{FADPRO_BASE}/fad/auth/login"
+    params = {"custNo": FADPRO_USER, "password": FADPRO_PASS}
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=30.0) as cl:
+            r = await cl.post(url, params=params)
+            if r.status_code != 200:
+                logger.warning(f"FadPro login failed: {r.status_code} {r.text[:200]}")
+                return None
+            data = r.json()
+            token = data.get("token")
+            if not token:
+                return None
+            # JWT lifetime ~12h based on iat/exp from response; cache for 11h to be safe
+            _token_cache["token"] = token
+            _token_cache["expires_at"] = now + 11 * 3600
+            return token
+    except Exception as e:
+        logger.warning(f"FadPro login error: {e}")
+        return None
+
+
+def _adjust_price(prix) -> Optional[float]:
+    """Apply markup: prix * 1.19 + 50 TND. Returns rounded to 3 decimals (TND)."""
+    if prix is None:
+        return None
+    try:
+        p = float(prix)
+    except (TypeError, ValueError):
+        return None
+    if p <= 0:
+        return None
+    return round(p * (1 + PRICE_MARKUP_VAT) + PRICE_FIXED_FEE, 3)
+
+
+def _normalize_item(raw: Dict) -> Dict:
+    """Map raw FadPro item to our public response shape."""
+    raw_prix = raw.get("prix")
+    stock_qty = raw.get("stock") or 0
+    dispo = (raw.get("dispo") or "").upper()
+    in_stock = dispo == "S" and stock_qty > 0
+
+    return {
+        "reference": raw.get("refFour") or "",
+        "fournisseur": raw.get("itemNomFpur") or raw.get("four") or "",
+        "designation": raw.get("designation") or "",
+        "modele": raw.get("marque") or "",
+        "in_stock": in_stock,
+        "stock": stock_qty,
+        "prix_origine_tnd": float(raw_prix) if isinstance(raw_prix, (int, float)) else None,
+        "prix_tnd": _adjust_price(raw_prix),
+        "categorie": " / ".join([x for x in [raw.get("niv1"), raw.get("niv2"), raw.get("niv3"), raw.get("niv4")] if x]),
+    }
+
+
+async def search_reference(reference: str) -> List[Dict]:
+    """Search FadPro for parts matching a reference. Returns list of normalized dicts."""
+    ref = (reference or "").strip()
+    if not ref:
+        return []
+
+    token = await _get_token()
+    if not token:
+        raise RuntimeError("Authentification FadPro impossible")
+
+    url = f"{FADPRO_BASE}/fad/api/b2b/search"
+    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=30.0) as cl:
+            r = await cl.get(url, params={"refFour": ref}, headers=headers)
+            if r.status_code == 401:
+                # Token expired? Try once more
+                token = await _get_token(force=True)
+                if not token:
+                    raise RuntimeError("Authentification FadPro impossible (refresh)")
+                headers["Authorization"] = f"Bearer {token}"
+                r = await cl.get(url, params={"refFour": ref}, headers=headers)
+            if r.status_code != 200:
+                logger.warning(f"FadPro search failed: {r.status_code} {r.text[:200]}")
+                raise RuntimeError(f"Erreur FadPro {r.status_code}")
+            data = r.json()
+            if not isinstance(data, list):
+                return []
+            items = [_normalize_item(it) for it in data]
+            # Filter: only items with a usable adjusted price OR with valid stock info
+            # (Keep all so user sees out-of-stock options too — frontend handles display)
+            return items
+    except httpx.RequestError as e:
+        logger.warning(f"FadPro request error: {e}")
+        raise RuntimeError("Réseau FadPro indisponible")

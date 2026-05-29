@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Wrench, Zap, CarFront, ArrowRight, ChevronLeft, Car, Fuel, Calendar, Hash, Database, Loader2 } from "lucide-react";
 import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import FadProSearch from "@/components/FadProSearch";
 
 const SECTIONS = [
   { slug: "mecanique", label: "Mécanique", desc: "Moteur, transmission, freinage, suspension", Icon: Wrench, color: "from-red-600 to-red-700", img: "https://images.pexels.com/photos/4489732/pexels-photo-4489732.jpeg?auto=compress&cs=tinysrgb&w=900&h=600" },
@@ -90,6 +91,28 @@ export default function VehicleDetail() {
             {vehicle.trim && vehicle.trim !== "—" ? `Finition ${vehicle.trim} · ` : ""}
             Choisissez la famille de pièces ci-dessous
           </p>
+        </div>
+      </div>
+
+      {/* FadPro reference search */}
+      <div className="bg-white border-b border-slate-200" data-testid="fadpro-search-strip">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="flex-shrink-0">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-red-600 mb-0.5">
+                Recherche rapide
+              </div>
+              <div className="text-sm font-semibold text-slate-900">
+                Par référence d'origine
+              </div>
+            </div>
+            <div className="flex-1 max-w-2xl">
+              <FadProSearch inline />
+            </div>
+            <div className="text-[11px] text-slate-400 italic hidden lg:block">
+              Stock partenaire FadPro · prix TND
+            </div>
+          </div>
         </div>
       </div>
 
