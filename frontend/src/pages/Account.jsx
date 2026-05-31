@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { api, formatApiError, formatPrice } from "@/lib/api";
+import ProductIcon, { Engine, OilBottle, BrakeDisc, CarBattery, OilFilter, ShockAbsorber, SparkPlug } from "@/components/ProductIcons";
 
 const STATUS_COLOR = {
   "En attente": "bg-amber-100 text-amber-800 border-amber-200",
@@ -50,11 +51,97 @@ const MENU = [
 ];
 
 const RECOMMENDED = [
-  { ref: "shell-helix-5w30", name: "Huile Moteur Shell Helix Ultra", sub: "5W-30 - 4L", rating: 4.5, reviews: 128, price: 85, img: "https://images.unsplash.com/photo-1635260629849-3bba29e9c4dc?auto=format&fit=crop&w=400&q=70" },
-  { ref: "brembo-kit-front", name: "Kit Freinage Brembo", sub: "Avant - Disques + Plaquettes", rating: 4.5, reviews: 96, price: 245, img: "https://images.unsplash.com/photo-1583836631265-058486cd0b29?auto=format&fit=crop&w=400&q=70" },
-  { ref: "bosch-s5-a08", name: "Batterie Bosch S5 A08", sub: "70Ah - 12V", rating: 4.5, reviews: 74, price: 310, img: "https://images.unsplash.com/photo-1614026480418-bd11fde6f8d6?auto=format&fit=crop&w=400&q=70" },
-  { ref: "bosch-kit-filtres", name: "Kit Filtres BOSCH", sub: "Clio 4 1.5 dCi", rating: 4.5, reviews: 53, price: 68, img: "https://images.unsplash.com/photo-1635764186984-7cea30c2d2cf?auto=format&fit=crop&w=400&q=70" },
-  { ref: "kyb-amortisseur", name: "Amortisseur KYB", sub: "Avant - Gaz", rating: 4.5, reviews: 41, price: 120, img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=400&q=70" },
+  {
+    ref: "shell-helix-5w30",
+    name: "Huile Moteur Shell Helix Ultra",
+    sub: "5W-30 - 4L",
+    rating: 4.5,
+    reviews: 128,
+    price: 85,
+    Icon: OilBottle,
+    bg: "from-amber-100 via-orange-50 to-yellow-100",
+  },
+  {
+    ref: "brembo-kit-front",
+    name: "Kit Freinage Brembo",
+    sub: "Avant - Disques + Plaquettes",
+    rating: 4.5,
+    reviews: 96,
+    price: 245,
+    Icon: BrakeDisc,
+    bg: "from-slate-200 via-slate-100 to-red-50",
+  },
+  {
+    ref: "bosch-s5-a08",
+    name: "Batterie Bosch S5 A08",
+    sub: "70Ah - 12V",
+    rating: 4.5,
+    reviews: 74,
+    price: 310,
+    Icon: CarBattery,
+    bg: "from-slate-200 via-slate-100 to-slate-50",
+  },
+  {
+    ref: "bosch-kit-filtres",
+    name: "Kit Filtres BOSCH",
+    sub: "Clio 4 1.5 dCi",
+    rating: 4.5,
+    reviews: 53,
+    price: 68,
+    Icon: OilFilter,
+    bg: "from-blue-100 via-sky-50 to-indigo-50",
+  },
+  {
+    ref: "kyb-amortisseur",
+    name: "Amortisseur KYB",
+    sub: "Avant - Gaz",
+    rating: 4.5,
+    reviews: 41,
+    price: 120,
+    Icon: ShockAbsorber,
+    bg: "from-amber-50 via-slate-100 to-amber-100",
+  },
+  {
+    ref: "bougies-ngk",
+    name: "Bougies d'allumage NGK",
+    sub: "Iridium IX - x4",
+    rating: 4.7,
+    reviews: 89,
+    price: 95,
+    Icon: SparkPlug,
+    bg: "from-red-100 via-red-50 to-orange-50",
+  },
+];
+
+const QUICK_CATEGORIES = [
+  {
+    key: "moteur",
+    label: "Moteur",
+    sub: "Pistons, joints, filtres",
+    Icon: Engine,
+    bg: "from-red-600 via-red-700 to-red-900",
+  },
+  {
+    key: "huiles",
+    label: "Huiles & Liquides",
+    sub: "Moteur, freins, refroidissement",
+    Icon: OilBottle,
+    bg: "from-amber-500 via-orange-600 to-amber-800",
+  },
+  {
+    key: "freinage",
+    label: "Freinage",
+    sub: "Disques, plaquettes, étriers",
+    Icon: BrakeDisc,
+    bg: "from-slate-700 via-slate-800 to-slate-900",
+  },
+  {
+    key: "batterie",
+    label: "Batterie & Démarrage",
+    sub: "Batteries, alternateurs",
+    Icon: CarBattery,
+    bg: "from-sky-600 via-blue-700 to-blue-900",
+  },
 ];
 
 function StarRating({ value = 4.5 }) {
@@ -74,20 +161,52 @@ function StatCard({ def, value }) {
   return (
     <Link
       to={def.link}
-      className="bg-white border border-slate-100 rounded-md p-5 hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4"
+      className="group relative overflow-hidden bg-white border border-slate-200/70 rounded-md p-5 hover:shadow-lg hover:-translate-y-0.5 hover:border-slate-300 transition-all"
       data-testid={`stat-${def.key}`}
     >
-      <div className={`${def.bg} rounded-md w-14 h-14 flex items-center justify-center flex-shrink-0`}>
-        <def.Icon className={`w-6 h-6 ${def.iconColor}`} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-xs text-slate-500 font-medium">{def.label}</div>
-        <div className="font-display text-3xl font-bold text-slate-900 leading-none mt-1">{value}</div>
-        <div className="text-[11px] text-slate-400 mt-1">
-          {def.key === "favorites" ? "Voir tous" : "Voir toutes"}
+      <div className={`absolute -top-4 -right-4 w-20 h-20 ${def.bg} rounded-full opacity-60 group-hover:scale-110 transition-transform`} />
+      <div className="relative flex items-center gap-4">
+        <div className={`${def.bg} rounded-md w-14 h-14 flex items-center justify-center flex-shrink-0 shadow-sm`}>
+          <def.Icon className={`w-7 h-7 ${def.iconColor}`} strokeWidth={1.6} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs text-slate-500 font-medium">{def.label}</div>
+          <div className="font-display text-3xl font-bold text-slate-900 leading-none mt-1">{value}</div>
+          <div className="text-[11px] text-slate-400 mt-1 group-hover:text-red-600 transition-colors">
+            {def.key === "favorites" ? "Voir tous →" : "Voir toutes →"}
+          </div>
         </div>
       </div>
     </Link>
+  );
+}
+
+function QuickCategories() {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-testid="quick-categories">
+      {QUICK_CATEGORIES.map((c) => (
+        <Link
+          key={c.key}
+          to={`/catalogue/${c.key === "huiles" ? "mecanique" : c.key === "batterie" ? "electrique" : c.key === "freinage" ? "mecanique" : "mecanique"}`}
+          className={`group relative h-36 overflow-hidden rounded-md border border-slate-200 bg-gradient-to-br ${c.bg} transition-all hover:shadow-xl hover:-translate-y-0.5`}
+          data-testid={`category-${c.key}`}
+        >
+          {/* Decorative grid */}
+          <div className="absolute inset-0 opacity-[0.06]" style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }} />
+          {/* SVG icon, large in background */}
+          <div className="absolute -right-4 -bottom-4 w-32 h-32 opacity-30 group-hover:opacity-50 group-hover:scale-110 transition-all duration-500">
+            <c.Icon className="w-full h-full" />
+          </div>
+          <div className="relative h-full flex flex-col justify-end p-4 text-white">
+            <div className="font-display text-lg font-bold leading-tight drop-shadow-lg">{c.label}</div>
+            <div className="text-[11px] text-white/90 mt-0.5 drop-shadow">{c.sub}</div>
+          </div>
+        </Link>
+      ))}
+    </div>
   );
 }
 
@@ -124,14 +243,12 @@ function RecommendedCarousel() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {slice.map((p) => (
-          <div key={p.ref} className="border border-slate-100 rounded-md overflow-hidden hover:shadow-sm transition-all">
-            <div className="h-32 bg-slate-50 flex items-center justify-center overflow-hidden">
-              <img
-                src={p.img}
-                alt={p.name}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.target.style.display = "none"; }}
-              />
+          <div key={p.ref} className="group border border-slate-100 rounded-md overflow-hidden hover:shadow-md hover:border-slate-200 hover:-translate-y-0.5 transition-all bg-white">
+            <div className={`relative h-40 bg-gradient-to-br ${p.bg} flex items-center justify-center overflow-hidden p-3`}>
+              <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-sm text-[9px] font-bold text-slate-700 shadow-sm">
+                NEUF
+              </div>
+              <p.Icon className="w-full h-full max-h-28 group-hover:scale-110 transition-transform duration-500 drop-shadow-md" />
             </div>
             <div className="p-3">
               <div className="font-semibold text-slate-900 text-sm leading-tight mb-1 line-clamp-1">{p.name}</div>
@@ -143,7 +260,7 @@ function RecommendedCarousel() {
               <div className="flex items-center justify-between mt-2">
                 <span className="font-bold text-slate-900 text-sm">{p.price.toFixed(3).replace(".", ",")} DT</span>
                 <button
-                  className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-sm transition-colors"
+                  className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-sm transition-colors shadow-sm"
                   aria-label="Ajouter au panier"
                   data-testid={`reco-add-${p.ref}`}
                 >
@@ -170,6 +287,48 @@ function DashboardView({ user, orders }) {
 
   return (
     <>
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-md mb-6 border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-red-950" data-testid="hero-banner">
+        <div className="absolute inset-0 opacity-[0.08]" style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }} />
+        {/* Decorative product icons on the right */}
+        <div className="absolute -right-8 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-3 opacity-25">
+          <div className="w-28 h-28">
+            <Engine className="w-full h-full" />
+          </div>
+          <div className="w-24 h-24 -ml-4">
+            <BrakeDisc className="w-full h-full" />
+          </div>
+          <div className="w-20 h-20 -ml-2">
+            <OilBottle className="w-full h-full" />
+          </div>
+        </div>
+        {/* Soft red glow */}
+        <div className="absolute -right-20 top-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/20 rounded-full blur-3xl" />
+        <div className="relative px-6 sm:px-10 py-8 sm:py-10 text-white flex flex-col sm:flex-row sm:items-center gap-6">
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.4em] text-red-400 mb-2">
+              Bienvenue
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold leading-tight mb-2">
+              Bonjour, <span className="text-red-400">{user?.name?.split(" ")[0] || "Cher client"}</span>
+            </h2>
+            <p className="text-slate-200/80 text-sm max-w-xl">
+              Retrouvez toutes vos commandes, vos pièces favorites et vos informations en un seul endroit.
+            </p>
+          </div>
+          <Link
+            to="/recherche-vin"
+            className="relative z-10 flex-shrink-0 inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-3 rounded-sm transition-colors text-sm shadow-lg shadow-red-900/40"
+            data-testid="hero-cta"
+          >
+            Rechercher une pièce <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {STAT_DEFS.map((d) => (
@@ -177,8 +336,19 @@ function DashboardView({ user, orders }) {
         ))}
       </div>
 
+      {/* Quick categories */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-red-600 mb-0.5">Achetez par catégorie</div>
+            <h3 className="font-display text-lg font-bold text-slate-900">Catégories populaires</h3>
+          </div>
+        </div>
+        <QuickCategories />
+      </div>
+
       {/* Two-column section */}
-      <div className="grid lg:grid-cols-2 gap-6 mt-6">
+      <div className="grid lg:grid-cols-2 gap-6 mt-8">
         {/* Last order */}
         <div className="bg-white border border-slate-100 rounded-md p-6" data-testid="last-order-card">
           <div className="flex items-center justify-between mb-4">
