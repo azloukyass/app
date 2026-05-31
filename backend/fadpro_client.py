@@ -52,7 +52,7 @@ async def _get_token(force: bool = False) -> Optional[str]:
 
 
 def _adjust_price(prix) -> Optional[float]:
-    """Apply markup: prix * 1.19 + 50 TND. Returns rounded to 3 decimals (TND)."""
+    """Apply markup: prix * 0.19 + 50 TND. Returns rounded to 3 decimals (TND)."""
     if prix is None:
         return None
     try:

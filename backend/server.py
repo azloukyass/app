@@ -76,6 +76,12 @@ class VinIn(BaseModel):
 class CartItem(BaseModel):
     ref: str
     quantity: int = 1
+    # Optional external item info (e.g. FadPro / PartSouq parts not in internal catalog)
+    source: Optional[str] = ""        # "fadpro", "partsouq", or "" for internal
+    name: Optional[str] = ""
+    brand: Optional[str] = ""
+    image: Optional[str] = ""
+    price_tnd: Optional[float] = None
 
 
 class OrderIn(BaseModel):
@@ -508,7 +514,7 @@ async def partsouq_subgroup_cached(vin: str, cid: str):
 @api.get("/fadpro/search")
 async def fadpro_search_endpoint(ref: str = "", user: dict = Depends(get_current_user)):
     """Search FadPro by reference origin (refFour). Authenticated users only.
-    Prices are adjusted: prix_origine × 1.19 + 50 DT."""
+    Prices are adjusted: prix_origine × 0.19 + 50 DT."""
     ref = (ref or "").strip()
     if len(ref) < 2:
         raise HTTPException(400, "Référence trop courte (min. 2 caractères)")
@@ -562,6 +568,23 @@ async def create_order(data: OrderIn, user: dict = Depends(get_current_user)):
     items_resolved = []
     total = 0.0
     for it in data.items:
+        # External items (FadPro / PartSouq): carry their own info
+        if it.source and it.price_tnd is not None:
+            price = float(it.price_tnd)
+            line_total = price * it.quantity
+            total += line_total
+            items_resolved.append({
+                "ref": it.ref,
+                "name": it.name or it.ref,
+                "brand": it.brand or "",
+                "image": it.image or "",
+                "unit_price_tnd": round(price, 3),
+                "quantity": it.quantity,
+                "line_total_tnd": round(line_total, 3),
+                "source": it.source,
+            })
+            continue
+        # Internal catalog
         part = find_part(it.ref)
         if not part:
             raise HTTPException(400, f"Pièce introuvable: {it.ref}")
@@ -575,6 +598,7 @@ async def create_order(data: OrderIn, user: dict = Depends(get_current_user)):
             "unit_price_tnd": part["price_tnd"],
             "quantity": it.quantity,
             "line_total_tnd": round(line_total, 3),
+            "source": "internal",
         })
     order = {
         "id": str(uuid.uuid4()),

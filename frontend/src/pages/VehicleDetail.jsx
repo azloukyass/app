@@ -109,9 +109,6 @@ export default function VehicleDetail() {
             <div className="flex-1 max-w-2xl">
               <FadProSearch inline />
             </div>
-            <div className="text-[11px] text-slate-400 italic hidden lg:block">
-              Stock partenaire FadPro · prix TND
-            </div>
           </div>
         </div>
       </div>
