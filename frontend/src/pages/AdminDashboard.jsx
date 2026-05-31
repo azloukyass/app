@@ -132,6 +132,8 @@ function OrdersTable({ orders, onStatusChange }) {
             <th className="px-4 py-3 text-left">#</th>
             <th className="px-4 py-3 text-left">Date</th>
             <th className="px-4 py-3 text-left">Client</th>
+            <th className="px-4 py-3 text-left">Téléphone</th>
+            <th className="px-4 py-3 text-left">Adresse</th>
             <th className="px-4 py-3 text-left">Véhicule</th>
             <th className="px-4 py-3 text-right">Total</th>
             <th className="px-4 py-3 text-left">Statut</th>
@@ -143,14 +145,33 @@ function OrdersTable({ orders, onStatusChange }) {
               <td className="px-4 py-3 font-mono-vin text-xs text-slate-500">{o.id.slice(0, 8)}</td>
               <td className="px-4 py-3 text-slate-600">{new Date(o.created_at).toLocaleDateString("fr-FR")}</td>
               <td className="px-4 py-3">
-                <div className="font-medium text-slate-800">{o.user_name}</div>
+                <div className="font-medium text-slate-800">{o.customer_name || o.user_name}</div>
                 <div className="text-xs text-slate-500">{o.user_email}</div>
+              </td>
+              <td className="px-4 py-3 text-slate-700 whitespace-nowrap" data-testid={`order-phone-${o.id}`}>
+                {o.phone ? (
+                  <a href={`tel:${o.phone}`} className="inline-flex items-center gap-1 hover:text-red-600">
+                    <Phone className="w-3 h-3" /> {o.phone}
+                  </a>
+                ) : (
+                  <span className="text-slate-400">—</span>
+                )}
+              </td>
+              <td className="px-4 py-3 text-slate-700 max-w-[220px]" data-testid={`order-address-${o.id}`}>
+                {o.shipping_address ? (
+                  <div className="inline-flex items-start gap-1">
+                    <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0 text-slate-400" />
+                    <span className="text-xs leading-snug line-clamp-2" title={o.shipping_address}>{o.shipping_address}</span>
+                  </div>
+                ) : (
+                  <span className="text-slate-400">—</span>
+                )}
               </td>
               <td className="px-4 py-3">
                 <div className="text-slate-700">{o.vehicle_label || "—"}</div>
                 <div className="text-xs font-mono-vin text-slate-500">{o.vehicle_vin}</div>
               </td>
-              <td className="px-4 py-3 text-right font-semibold text-slate-900">{formatPrice(o.total_tnd)}</td>
+              <td className="px-4 py-3 text-right font-semibold text-slate-900 whitespace-nowrap">{formatPrice(o.total_tnd)}</td>
               <td className="px-4 py-3">
                 <select
                   value={o.status}
