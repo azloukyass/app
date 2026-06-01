@@ -13,7 +13,7 @@ import httpx
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, BackgroundTasks
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
@@ -22,6 +22,7 @@ from catalog_data import CATALOG, get_section, get_category, find_part
 from vehicles_catalog import get_catalog as get_vehicles_catalog, VEHICLES
 from partsouq_scraper import scrape_vin as partsouq_scrape, scrape_subgroup_parts
 from fadpro_client import search_reference as fadpro_search
+from email_service import send_welcome_email, send_order_confirmation, send_contact_to_admin
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -101,6 +102,7 @@ class OrderStatusIn(BaseModel):
 class ContactIn(BaseModel):
     name: str
     email: EmailStr
+    phone: Optional[str] = ""
     subject: str
     message: str
 
@@ -158,7 +160,7 @@ def user_to_dict(u: dict) -> dict:
 
 
 @api.post("/auth/register")
-async def register(data: RegisterIn, response: Response):
+async def register(data: RegisterIn, response: Response, background_tasks: BackgroundTasks):
     email = data.email.lower().strip()
     if await db.users.find_one({"email": email}):
         raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
@@ -176,6 +178,8 @@ async def register(data: RegisterIn, response: Response):
     await db.users.insert_one(doc)
     token = create_access_token(user_id, email)
     set_auth_cookie(response, token)
+    # Welcome email (async, non-blocking)
+    background_tasks.add_task(send_welcome_email, doc["name"], doc["email"])
     return {"user": user_to_dict(doc), "token": token}
 
 
@@ -562,7 +566,7 @@ async def vehicles_manual(payload: ManualVehicleIn):
 
 
 @api.post("/orders")
-async def create_order(data: OrderIn, user: dict = Depends(get_current_user)):
+async def create_order(data: OrderIn, background_tasks: BackgroundTasks, user: dict = Depends(get_current_user)):
     if not data.items:
         raise HTTPException(400, "Le panier est vide")
     items_resolved = []
@@ -619,6 +623,8 @@ async def create_order(data: OrderIn, user: dict = Depends(get_current_user)):
     }
     await db.orders.insert_one(order)
     order.pop("_id", None)
+    # Confirmation email to customer (async)
+    background_tasks.add_task(send_order_confirmation, order)
     return order
 
 
@@ -665,13 +671,14 @@ async def update_order_status(order_id: str, payload: OrderStatusIn, admin: dict
 
 
 @api.post("/contact")
-async def create_contact_message(data: ContactIn):
+async def create_contact_message(data: ContactIn, background_tasks: BackgroundTasks):
     if not data.message.strip():
         raise HTTPException(400, "Le message ne peut pas être vide")
     doc = {
         "id": str(uuid.uuid4()),
         "name": data.name.strip(),
         "email": data.email.lower().strip(),
+        "phone": (data.phone or "").strip(),
         "subject": data.subject.strip() or "Sans objet",
         "message": data.message.strip(),
         "read": False,
@@ -679,6 +686,8 @@ async def create_contact_message(data: ContactIn):
     }
     await db.contact_messages.insert_one(doc)
     doc.pop("_id", None)
+    # Forward to admin email (async)
+    background_tasks.add_task(send_contact_to_admin, doc)
     return {"ok": True, "id": doc["id"]}
 
 
