@@ -89,18 +89,18 @@ export default function Header() {
     <header className="sticky top-0 z-40 bg-black border-b border-red-600/30" data-testid="site-header">
       {/* Top utility bar */}
       <div className="bg-black border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-10 text-xs text-white/80">
-          <div className="inline-flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-10 text-xs text-white">
+          <div className="inline-flex items-center gap-2 font-medium">
             <Truck className="w-3.5 h-3.5 text-red-500" />
             <span>Livraison rapide dans toute la Tunisie</span>
           </div>
-          <div className="flex items-center gap-5">
-            <Link to="/a-propos" className="hover:text-red-400 transition-colors hidden sm:inline">À propos de nous</Link>
-            <Link to="/contact" className="hover:text-red-400 transition-colors">Contactez-nous</Link>
-            <div className="flex items-center gap-3 pl-2 border-l border-white/10">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-red-500" aria-label="Facebook"><Facebook className="w-4 h-4" /></a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-red-500" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
-              <a href="https://wa.me/21671123456" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-red-500" aria-label="WhatsApp"><WhatsAppIcon className="w-4 h-4" /></a>
+          <div className="flex items-center gap-5 font-medium">
+            <Link to="/a-propos" className="text-white hover:text-red-500 transition-colors hidden sm:inline">À propos de nous</Link>
+            <Link to="/contact" className="text-white hover:text-red-500 transition-colors">Contactez-nous</Link>
+            <div className="flex items-center gap-3 pl-2 border-l border-white/15">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="Facebook"><Facebook className="w-4 h-4" /></a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
+              <a href="https://wa.me/21671123456" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="WhatsApp"><WhatsAppIcon className="w-4 h-4" /></a>
             </div>
           </div>
         </div>
@@ -136,30 +136,30 @@ export default function Header() {
           {/* Account & cart */}
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {user ? (
-              <Link to="/compte" className="hidden sm:inline-flex items-center gap-2 text-white hover:text-red-400 transition-colors" data-testid="header-account">
-                <div className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center">
-                  <User className="w-5 h-5" />
+              <Link to="/compte" className="hidden sm:inline-flex items-center gap-2 text-white hover:text-red-500 transition-colors" data-testid="header-account">
+                <div className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center">
+                  <User className="w-5 h-5 text-white" />
                 </div>
                 <div className="leading-tight">
-                  <div className="text-[10px] uppercase tracking-wider text-white/60">Mon compte</div>
-                  <div className="text-sm font-semibold flex items-center gap-1">{user.name?.split(" ")[0]} <ChevronDown className="w-3 h-3" /></div>
+                  <div className="text-[10px] uppercase tracking-wider text-white/80">Mon compte</div>
+                  <div className="text-sm font-semibold flex items-center gap-1 text-white">{user.name?.split(" ")[0]} <ChevronDown className="w-3 h-3" /></div>
                 </div>
               </Link>
             ) : (
-              <Link to="/connexion" className="hidden sm:inline-flex items-center gap-2 text-white hover:text-red-400 text-sm font-semibold" data-testid="header-login">
+              <Link to="/connexion" className="hidden sm:inline-flex items-center gap-2 text-white hover:text-red-500 text-sm font-semibold" data-testid="header-login">
                 <User className="w-5 h-5" /> Connexion
               </Link>
             )}
             <Link to="/panier" className="relative inline-flex items-center gap-2 text-white" data-testid="header-cart">
-              <div className="relative w-10 h-10 rounded-full border border-white/30 flex items-center justify-center">
-                <ShoppingCart className="w-5 h-5" />
+              <div className="relative w-10 h-10 rounded-full border border-white/40 flex items-center justify-center">
+                <ShoppingCart className="w-5 h-5 text-white" />
                 {count > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center" data-testid="cart-count">{count}</span>
                 )}
               </div>
               <div className="hidden sm:block leading-tight">
-                <div className="text-[10px] uppercase tracking-wider text-white/60">Panier</div>
-                <div className="text-sm font-semibold text-red-400">{count} article{count !== 1 && "s"}</div>
+                <div className="text-[10px] uppercase tracking-wider text-white/80">Panier</div>
+                <div className="text-sm font-semibold text-white">{count} article{count !== 1 && "s"}</div>
               </div>
             </Link>
             {user?.role === "admin" && (
@@ -183,18 +183,6 @@ export default function Header() {
           </div>
         </div>
       </div>
-
-      {/* Main nav */}
-      <nav className="bg-black border-t border-white/10 hidden md:block" data-testid="header-nav">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-stretch h-12 gap-8">
-          <NavLink to="/" end className={navLink} data-testid="nav-home">
-            <span className="flex h-full items-center border-b-2 border-transparent [&.active]:border-red-500">Accueil</span>
-          </NavLink>
-          <NavLink to="/contact" className={navLink} data-testid="nav-contact">
-            <span className="flex h-full items-center border-b-2 border-transparent">Contact</span>
-          </NavLink>
-        </div>
-      </nav>
 
       {/* Mobile menu */}
       {open && (

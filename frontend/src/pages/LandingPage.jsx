@@ -108,35 +108,50 @@ export default function LandingPage() {
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-red-500" /> Livraison rapide</span>
             </div>
 
-            {/* Small VIN search */}
+            {/* Polished VIN search */}
             <form onSubmit={handleVin} className="mt-8 max-w-xl" data-testid="hero-vin-form">
-              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-2">
-                Trouvez vos pièces · Saisissez votre VIN
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-3">
+                <span className="w-4 h-px bg-red-500"></span>
+                <Hash className="w-3 h-3" />
+                Trouvez vos pièces par VIN
               </div>
-              <div className="flex bg-white rounded-sm overflow-hidden shadow-lg">
-                <div className="flex items-center pl-3 text-black/40">
+              <div className="group flex items-stretch bg-white rounded-sm overflow-hidden shadow-2xl shadow-red-900/40 ring-1 ring-white/10 focus-within:ring-2 focus-within:ring-red-500 transition-all">
+                <div className="flex items-center pl-4 pr-2 text-black/30 border-r border-zinc-100">
                   <Hash className="w-4 h-4" />
                 </div>
                 <input
                   type="text"
                   value={vin}
                   onChange={(e) => setVin(e.target.value.toUpperCase())}
-                  placeholder="Ex: VF15R0K0H48649991"
+                  placeholder="VF15R0K0H48649991"
                   maxLength={17}
-                  className="flex-1 px-2 py-2.5 text-sm font-mono text-black focus:outline-none placeholder:text-black/30"
+                  className="flex-1 px-3 py-3 text-sm font-mono tracking-wider text-black focus:outline-none placeholder:text-black/25"
                   data-testid="hero-vin-input"
                 />
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 px-5 text-white text-sm font-bold uppercase tracking-wider transition-colors flex items-center gap-2"
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 px-6 text-white text-xs font-black uppercase tracking-wider transition-colors flex items-center gap-2 group-focus-within:bg-red-700"
                   data-testid="hero-vin-submit"
                 >
-                  {loading ? "..." : <>Rechercher <ArrowRight className="w-4 h-4" /></>}
+                  {loading ? (
+                    <>
+                      <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Recherche
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4" />
+                      Rechercher
+                    </>
+                  )}
                 </button>
               </div>
-              <div className="mt-2 text-[11px] text-white/50">
-                17 caractères en général · {vin.length}/17
+              <div className="mt-2 flex items-center justify-between text-[11px]">
+                <span className="text-white/50">17 caractères en général · <span className="text-red-400 font-semibold">{vin.length}/17</span></span>
+                <Link to="/recherche-vin" className="text-red-400 hover:text-red-300 font-semibold uppercase tracking-wider">
+                  Recherche par marque →
+                </Link>
               </div>
             </form>
 
@@ -151,31 +166,27 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right: Hero image / product showcase */}
+          {/* Right: Hero image with real auto parts photo */}
           <div className="lg:col-span-6 relative">
             <div className="relative aspect-[5/4] rounded-sm overflow-hidden border border-white/10 bg-gradient-to-br from-black via-zinc-900 to-black">
-              {/* Background SVG composition */}
-              <div className="absolute inset-0 grid grid-cols-3 gap-2 p-4 opacity-90">
-                <div className="flex items-end justify-center">
-                  <BrakeDisc className="w-full max-w-[180px] drop-shadow-2xl" />
-                </div>
-                <div className="flex items-center justify-center">
-                  <Engine className="w-full max-w-[200px] drop-shadow-2xl" />
-                </div>
-                <div className="flex items-end justify-center">
-                  <OilBottle className="w-full max-w-[150px] drop-shadow-2xl" />
-                </div>
-                <div className="flex items-start justify-center">
-                  <OilFilter className="w-full max-w-[140px] drop-shadow-2xl" />
-                </div>
-                <div className="flex items-center justify-center">
-                  <CarBattery className="w-full max-w-[170px] drop-shadow-2xl" />
-                </div>
-                <div className="flex items-start justify-center">
-                  <ShockAbsorber className="w-full max-w-[120px] drop-shadow-2xl" />
-                </div>
+              {/* Try real product image, fallback to SVG composition */}
+              <img
+                src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=70"
+                alt="Pièces auto originales"
+                className="absolute inset-0 w-full h-full object-cover opacity-90"
+                onError={(e) => { e.target.style.display = "none"; }}
+              />
+              {/* SVG fallback / overlay composition */}
+              <div className="absolute inset-0 grid grid-cols-3 gap-2 p-4 opacity-80 mix-blend-screen">
+                <div className="flex items-end justify-center"><BrakeDisc className="w-full max-w-[180px] drop-shadow-2xl" /></div>
+                <div className="flex items-center justify-center"><Engine className="w-full max-w-[200px] drop-shadow-2xl" /></div>
+                <div className="flex items-end justify-center"><OilBottle className="w-full max-w-[150px] drop-shadow-2xl" /></div>
+                <div className="flex items-start justify-center"><OilFilter className="w-full max-w-[140px] drop-shadow-2xl" /></div>
+                <div className="flex items-center justify-center"><CarBattery className="w-full max-w-[170px] drop-shadow-2xl" /></div>
+                <div className="flex items-start justify-center"><ShockAbsorber className="w-full max-w-[120px] drop-shadow-2xl" /></div>
               </div>
-              {/* Red shine corner */}
+              {/* Vignette */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-transparent to-red-900/30" />
               <div className="absolute -top-20 -right-20 w-60 h-60 bg-red-600/30 rounded-full blur-3xl" />
               <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-red-600/20 rounded-full blur-3xl" />
             </div>
@@ -183,34 +194,36 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trust badges row */}
-      <section className="bg-zinc-950 border-y border-white/10" data-testid="trust-badges">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {TRUST_BADGES.map((b) => (
-            <div key={b.title} className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-red-600/10 border border-red-600/30 rounded-full flex items-center justify-center flex-shrink-0">
-                <b.Icon className="w-6 h-6 text-red-500" strokeWidth={1.8} />
+      {/* Trust badges row — WHITE bg */}
+      <section className="bg-white text-black" data-testid="trust-badges">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {TRUST_BADGES.map((b) => (
+              <div key={b.title} className="group flex items-center gap-4 p-5 bg-zinc-50 border border-zinc-200 hover:border-red-600 hover:bg-white hover:shadow-lg transition-all rounded-sm">
+                <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-md shadow-red-600/30">
+                  <b.Icon className="w-6 h-6 text-white" strokeWidth={2} />
+                </div>
+                <div>
+                  <div className="font-display font-black text-black uppercase text-sm tracking-wide">{b.title}</div>
+                  <div className="text-xs text-zinc-600 mt-0.5">{b.sub}</div>
+                </div>
               </div>
-              <div>
-                <div className="font-display font-bold text-white uppercase text-sm tracking-wide">{b.title}</div>
-                <div className="text-xs text-white/60 mt-0.5">{b.sub}</div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Catégories populaires */}
-      <section className="bg-black" data-testid="popular-categories">
+      {/* Catégories populaires — WHITE bg */}
+      <section className="bg-white text-black" data-testid="popular-categories">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-2">Découvrez nos catégories</div>
-              <h2 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight uppercase">
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600 mb-2">Découvrez nos catégories</div>
+              <h2 className="font-display font-black text-3xl sm:text-4xl text-black tracking-tight uppercase">
                 Catégories populaires
               </h2>
             </div>
-            <Link to="/recherche-vin" className="text-sm font-semibold text-red-500 hover:text-red-400 inline-flex items-center gap-1">
+            <Link to="/recherche-vin" className="text-sm font-semibold text-red-600 hover:text-red-700 inline-flex items-center gap-1">
               Voir toutes les catégories <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -220,16 +233,16 @@ export default function LandingPage() {
               <Link
                 key={c.key}
                 to="/recherche-vin"
-                className="group relative bg-zinc-900 border border-white/10 hover:border-red-600/60 rounded-sm overflow-hidden aspect-square flex flex-col items-center justify-center p-4 transition-all hover:bg-zinc-900/80 hover:shadow-lg hover:shadow-red-900/30"
+                className="group relative bg-zinc-50 border border-zinc-200 hover:border-red-600 rounded-sm overflow-hidden aspect-square flex flex-col items-center justify-center p-4 transition-all hover:bg-white hover:shadow-xl"
                 data-testid={`popular-cat-${c.key}`}
               >
-                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-red-600/10 rounded-full blur-2xl group-hover:bg-red-600/30 transition-colors" />
+                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-red-600/0 group-hover:bg-red-600/10 rounded-full blur-2xl transition-colors" />
                 <div className="relative w-full h-2/3 flex items-center justify-center">
                   <c.Icon className="w-full h-full max-w-[80px] group-hover:scale-110 transition-transform" />
                 </div>
                 <div className="relative mt-2 text-center">
-                  <div className="font-display font-bold text-white text-sm uppercase tracking-wide">{c.label}</div>
-                  <div className="text-[10px] text-red-400 mt-0.5">{c.count}</div>
+                  <div className="font-display font-bold text-black text-sm uppercase tracking-wide">{c.label}</div>
+                  <div className="text-[10px] text-red-600 mt-0.5 font-semibold">{c.count}</div>
                 </div>
               </Link>
             ))}
@@ -237,20 +250,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Constructeurs / Brands */}
-      <section className="bg-zinc-950 border-t border-white/10" data-testid="brands-section">
+      {/* Constructeurs / Brands — WHITE bg */}
+      <section className="bg-zinc-50 text-black border-y border-zinc-200" data-testid="brands-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-3">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-2">Constructeurs</div>
-              <h2 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight uppercase">
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600 mb-2">Constructeurs</div>
+              <h2 className="font-display font-black text-3xl sm:text-4xl text-black tracking-tight uppercase">
                 Constructeurs automobile
               </h2>
-              <p className="text-white/50 mt-2 text-sm">
+              <p className="text-zinc-600 mt-2 text-sm">
                 {BRANDS.length} marques · plus de {BRANDS.reduce((s, b) => s + b.models.length, 0)} modèles couverts
               </p>
             </div>
-            <div className="text-xs text-white/40 italic">
+            <div className="text-xs text-zinc-500 italic">
               Survolez un logo pour voir la couleur de la marque
             </div>
           </div>
@@ -260,7 +273,7 @@ export default function LandingPage() {
               <Link
                 key={b.slug}
                 to={`/marque/${b.slug}`}
-                className="brand-card group flex flex-col items-center justify-center p-3 transition-all duration-300"
+                className="brand-card-light group flex flex-col items-center justify-center p-3 transition-all duration-300"
                 style={{ "--brand-color": b.color }}
                 data-testid={`brand-card-${b.slug}`}
               >
@@ -276,11 +289,11 @@ export default function LandingPage() {
                       if (fb) fb.style.display = "block";
                     }}
                   />
-                  <span className="brand-logo-fallback font-display font-bold text-white/80 group-hover:text-[color:var(--brand-color)] transition-colors text-lg" style={{ display: "none" }}>
+                  <span className="brand-logo-fallback font-display font-bold text-zinc-700 group-hover:text-[color:var(--brand-color)] transition-colors text-lg" style={{ display: "none" }}>
                     {b.name}
                   </span>
                 </div>
-                <div className="mt-3 text-[10px] sm:text-xs font-semibold text-white/60 group-hover:text-[color:var(--brand-color)] transition-colors uppercase tracking-wider text-center truncate w-full">
+                <div className="mt-3 text-[10px] sm:text-xs font-semibold text-zinc-600 group-hover:text-[color:var(--brand-color)] transition-colors uppercase tracking-wider text-center truncate w-full">
                   {b.name}
                 </div>
               </Link>
@@ -289,20 +302,19 @@ export default function LandingPage() {
         </div>
 
         <style>{`
-          .brand-card { will-change: transform; }
-          .brand-card .brand-logo {
-            filter: grayscale(1) brightness(1.4) contrast(0.8);
-            opacity: 0.55;
+          .brand-card-light .brand-logo {
+            filter: grayscale(1) brightness(0.7);
+            opacity: 0.6;
           }
-          .brand-card:hover .brand-logo {
-            filter: brightness(1.1);
+          .brand-card-light:hover .brand-logo {
+            filter: none;
             opacity: 1;
             transform: scale(1.12);
           }
         `}</style>
       </section>
 
-      {/* Final CTA strip */}
+      {/* Final CTA strip — RED */}
       <section className="bg-red-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center gap-6 justify-between">
           <div>
@@ -316,7 +328,7 @@ export default function LandingPage() {
             <a href="tel:+21671123456" className="bg-black text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm hover:bg-zinc-900 transition-colors inline-flex items-center gap-2">
               <Headphones className="w-4 h-4" /> +216 71 123 456
             </a>
-            <Link to="/contact" className="border border-white text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm hover:bg-white hover:text-red-600 transition-colors">
+            <Link to="/contact" className="border-2 border-white text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm hover:bg-white hover:text-red-600 transition-colors">
               Nous écrire
             </Link>
           </div>
