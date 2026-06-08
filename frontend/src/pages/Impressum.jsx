@@ -20,7 +20,7 @@ export default function Impressum() {
 
         <Section icon={Phone} title="Contact">
           <p><strong>Téléphone :</strong> <a href="tel:+21671123456" className="text-red-600 hover:underline">+216 54 643 643</a></p>
-          <p><strong>Email :</strong> <a href="mailto:contact@bennouri.com" className="text-red-600 hover:underline">contact@bennouri.com</a></p>
+          <p><strong>Email :</strong> <a href="mailto:contact@bennouri.tn" className="text-red-600 hover:underline">contact@bennouri.tn</a></p>
           <p><strong>Horaires :</strong> Lundi – Samedi, 8h00 – 20h00</p>
         </Section>
 
@@ -45,7 +45,7 @@ export default function Impressum() {
         </Section>
 
         <Section icon={Shield} title="Données personnelles">
-          <p>Conformément à la loi tunisienne n°2004-63 relative à la protection des données à caractère personnel, vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant. Pour exercer ce droit, contactez-nous à <a href="mailto:contact@bennouri.com" className="text-red-600 hover:underline">contact@bennouri.com</a>.</p>
+          <p>Conformément à la loi tunisienne n°2004-63 relative à la protection des données à caractère personnel, vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant. Pour exercer ce droit, contactez-nous à <a href="mailto:contact@bennouri.tn" className="text-red-600 hover:underline">contact@bennouri.tn</a>.</p>
         </Section>
 
         <Section icon={MapPin} title="Compétence juridictionnelle">

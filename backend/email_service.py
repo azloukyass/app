@@ -54,12 +54,19 @@ def _send_sync(to: str, subject: str, html: str, reply_to: Optional[str] = None)
 
     try:
         ctx = ssl.create_default_context()
-        with smtplib.SMTP(cfg["host"], cfg["port"], timeout=30) as srv:
-            srv.ehlo()
-            srv.starttls(context=ctx)
-            srv.ehlo()
-            srv.login(cfg["user"], cfg["password"])
-            srv.sendmail(cfg["from_email"], [to], msg.as_string())
+        # Port 465 → implicit SSL/TLS; 587 → STARTTLS
+        if cfg["port"] == 465:
+            with smtplib.SMTP_SSL(cfg["host"], cfg["port"], timeout=30, context=ctx) as srv:
+                srv.ehlo()
+                srv.login(cfg["user"], cfg["password"])
+                srv.sendmail(cfg["from_email"], [to], msg.as_string())
+        else:
+            with smtplib.SMTP(cfg["host"], cfg["port"], timeout=30) as srv:
+                srv.ehlo()
+                srv.starttls(context=ctx)
+                srv.ehlo()
+                srv.login(cfg["user"], cfg["password"])
+                srv.sendmail(cfg["from_email"], [to], msg.as_string())
         logger.info(f"Email sent to {to}: {subject}")
         return True
     except Exception as e:
@@ -142,7 +149,7 @@ def _wrap(title: str, hero_eyebrow: str, hero_title: str, hero_subtitle: str, bo
               <div style="font-size:12px;color:{BRAND_MUTED};margin-top:6px;">
                 Rue de France, 2043 Ben Arous, Tunisie<br/>
                 <a href="tel:+21671123456" style="color:{BRAND_RED};text-decoration:none;font-weight:600;">+216 71 123 456</a> ·
-                <a href="mailto:1zimo-werkstatt@web.de" style="color:{BRAND_RED};text-decoration:none;font-weight:600;">contact@bennouri.tn</a>
+                <a href="mailto:contact@bennouri.tn" style="color:{BRAND_RED};text-decoration:none;font-weight:600;">contact@bennouri.tn</a>
               </div>
             </td>
           </tr>

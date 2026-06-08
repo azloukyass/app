@@ -86,7 +86,7 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <a href="mailto:contact@bennouri.com" className="hover:text-red-400">contact@bennouri.com</a>
+              <a href="mailto:contact@bennouri.tn" className="hover:text-red-400">contact@bennouri.tn</a>
             </li>
             <li className="flex items-center gap-3">
               <Clock className="w-4 h-4 text-red-500 flex-shrink-0" />

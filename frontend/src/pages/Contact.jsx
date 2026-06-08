@@ -40,7 +40,7 @@ export default function Contact() {
           {[
             { Icon: MapPin, t: "Adresse", v: "Rue de France, 2043 Ben Arous, Tunisie" },
             { Icon: Phone, t: "Téléphone", v: "+216 54 643 643", href: "tel:+21671123456" },
-            { Icon: Mail, t: "Email", v: "contact@bennouri.com", href: "mailto:contact@bennouri.com" },
+            { Icon: Mail, t: "Email", v: "contact@bennouri.tn", href: "mailto:contact@bennouri.tn" },
             { Icon: Clock, t: "Horaires", v: "Lun – Sam : 8h00 – 20h00" },
           ].map((it, i) => (
             <div key={i} className="bg-white border border-slate-200 rounded-sm p-5 flex items-start gap-4" data-testid={`contact-info-${i}`}>
