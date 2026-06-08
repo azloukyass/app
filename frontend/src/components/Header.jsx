@@ -141,7 +141,7 @@ export default function Header() {
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div className="leading-tight">
-                  <div className="text-[10px] uppercase tracking-wider text-white/80">Mon compte</div>
+                  <div className="text-[10px] uppercase tracking-wider text-white">Mon compte</div>
                   <div className="text-sm font-semibold flex items-center gap-1 text-white">{user.name?.split(" ")[0]} <ChevronDown className="w-3 h-3" /></div>
                 </div>
               </Link>
@@ -158,7 +158,7 @@ export default function Header() {
                 )}
               </div>
               <div className="hidden sm:block leading-tight">
-                <div className="text-[10px] uppercase tracking-wider text-white/80">Panier</div>
+                <div className="text-[10px] uppercase tracking-wider text-white">Panier</div>
                 <div className="text-sm font-semibold text-white">{count} article{count !== 1 && "s"}</div>
               </div>
             </Link>
@@ -201,8 +201,6 @@ export default function Header() {
             </div>
           </form>
           <div className="px-4 py-3 space-y-2">
-            <Link to="/" onClick={() => setOpen(false)} className="block py-2 text-white">Accueil</Link>
-            <Link to="/contact" onClick={() => setOpen(false)} className="block py-2 text-white">Contact</Link>
             {user ? (
               <>
                 <Link to="/compte" onClick={() => setOpen(false)} className="block py-2 text-white">Mon compte</Link>

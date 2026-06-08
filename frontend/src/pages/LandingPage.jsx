@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { BRANDS, logoUrl } from "@/data/brands";
-import { OilBottle, BrakeDisc, CarBattery, OilFilter, Engine, ShockAbsorber, SparkPlug } from "@/components/ProductIcons";
+import { OilBottle, BrakeDisc, CarBattery, OilFilter, Engine, ShockAbsorber } from "@/components/ProductIcons";
 
 const POPULAR_CATEGORIES = [
   { key: "freinage", label: "Freinage", Icon: BrakeDisc, count: "1 200+ pièces" },
@@ -80,35 +80,45 @@ export default function LandingPage() {
 
   return (
     <div className="bg-black text-white" data-testid="landing-page">
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-black" data-testid="hero-section">
-        {/* Decorative grid */}
-        <div className="absolute inset-0 opacity-[0.05]" style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-        }} />
-        {/* Soft red glow */}
-        <div className="absolute -right-40 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+      {/* Hero — full-width banner with real auto parts photo */}
+      <section className="relative overflow-hidden bg-black min-h-[640px] lg:min-h-[680px] flex items-center" data-testid="hero-section">
+        {/* Background image — full bleed, parts on the right, dark fade to the left */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://customer-assets.emergentagent.com/job_mechanic-hub-200/artifacts/5q4klcwe_section%20body_vin%20.jpg"
+            alt="Pièces auto originales"
+            className="absolute inset-0 w-full h-full object-cover object-right"
+            onError={(e) => {
+              e.target.src = "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1920&q=80";
+              e.target.onerror = null;
+            }}
+          />
+          {/* Strong left-to-transparent gradient so text is readable */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/95 to-black/10" />
+          <div className="absolute inset-y-0 left-0 w-1/2 bg-black/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+          {/* Red glow accent */}
+          <div className="absolute -right-40 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+        </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 grid lg:grid-cols-12 gap-10 items-center">
-          {/* Left: Big title + small VIN form */}
-          <div className="lg:col-span-6">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 w-full">
+          <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-red-500 mb-4">
               <span className="w-6 h-px bg-red-500"></span> Pièces auto en Tunisie
             </div>
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight">
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] tracking-tight text-white">
               PIÈCES AUTO<br />
               <span className="text-red-600">ORIGINALES</span>
             </h1>
-            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/90 font-semibold">
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white font-semibold">
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-red-500" /> Qualité garantie</span>
-              <span className="text-white/30">|</span>
+              <span className="text-white/40">|</span>
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-red-500" /> Meilleurs prix</span>
-              <span className="text-white/30">|</span>
+              <span className="text-white/40">|</span>
               <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-red-500" /> Livraison rapide</span>
             </div>
 
-            {/* Polished VIN search */}
+            {/* VIN search */}
             <form onSubmit={handleVin} className="mt-8 max-w-xl" data-testid="hero-vin-form">
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-3">
                 <span className="w-4 h-px bg-red-500"></span>
@@ -148,7 +158,7 @@ export default function LandingPage() {
                 </button>
               </div>
               <div className="mt-2 flex items-center justify-between text-[11px]">
-                <span className="text-white/50">17 caractères en général · <span className="text-red-400 font-semibold">{vin.length}/17</span></span>
+                <span className="text-white/60">17 caractères en général · <span className="text-red-400 font-semibold">{vin.length}/17</span></span>
                 <Link to="/recherche-vin" className="text-red-400 hover:text-red-300 font-semibold uppercase tracking-wider">
                   Recherche par marque →
                 </Link>
@@ -158,37 +168,11 @@ export default function LandingPage() {
             <div className="mt-8">
               <Link
                 to="/recherche-vin"
-                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm transition-colors shadow-lg shadow-red-900/30"
+                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-sm tracking-wider px-7 py-3.5 rounded-sm transition-colors shadow-lg shadow-red-900/40"
                 data-testid="hero-cta-discover"
               >
                 Découvrir nos produits <ArrowRight className="w-4 h-4" />
               </Link>
-            </div>
-          </div>
-
-          {/* Right: Hero image with real auto parts photo */}
-          <div className="lg:col-span-6 relative">
-            <div className="relative aspect-[5/4] rounded-sm overflow-hidden border border-white/10 bg-gradient-to-br from-black via-zinc-900 to-black">
-              {/* Try real product image, fallback to SVG composition */}
-              <img
-                src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=70"
-                alt="Pièces auto originales"
-                className="absolute inset-0 w-full h-full object-cover opacity-90"
-                onError={(e) => { e.target.style.display = "none"; }}
-              />
-              {/* SVG fallback / overlay composition */}
-              <div className="absolute inset-0 grid grid-cols-3 gap-2 p-4 opacity-80 mix-blend-screen">
-                <div className="flex items-end justify-center"><BrakeDisc className="w-full max-w-[180px] drop-shadow-2xl" /></div>
-                <div className="flex items-center justify-center"><Engine className="w-full max-w-[200px] drop-shadow-2xl" /></div>
-                <div className="flex items-end justify-center"><OilBottle className="w-full max-w-[150px] drop-shadow-2xl" /></div>
-                <div className="flex items-start justify-center"><OilFilter className="w-full max-w-[140px] drop-shadow-2xl" /></div>
-                <div className="flex items-center justify-center"><CarBattery className="w-full max-w-[170px] drop-shadow-2xl" /></div>
-                <div className="flex items-start justify-center"><ShockAbsorber className="w-full max-w-[120px] drop-shadow-2xl" /></div>
-              </div>
-              {/* Vignette */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/70 via-transparent to-red-900/30" />
-              <div className="absolute -top-20 -right-20 w-60 h-60 bg-red-600/30 rounded-full blur-3xl" />
-              <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-red-600/20 rounded-full blur-3xl" />
             </div>
           </div>
         </div>
@@ -318,7 +302,7 @@ export default function LandingPage() {
       <section className="bg-red-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center gap-6 justify-between">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/80 mb-2">Besoin d'aide ?</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/80 mb-2">Besoin d&apos;aide ?</div>
             <h3 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight">
               Notre équipe est à votre service
             </h3>
