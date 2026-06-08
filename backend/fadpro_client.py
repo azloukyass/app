@@ -53,7 +53,7 @@ async def _get_token(force: bool = False) -> Optional[str]:
 
 def _adjust_price(prix) -> Optional[float]:
     """Apply unified markup across all suppliers:
-    final = prix + 19% + 35% = prix * 1.54
+    final = prix + 19% + 25% = prix * 1.44
     Returns rounded to 3 decimals (TND)."""
     if prix is None:
         return None
@@ -63,7 +63,7 @@ def _adjust_price(prix) -> Optional[float]:
         return None
     if p <= 0:
         return None
-    return round(p * 1.54, 3)
+    return round(p * 1.44, 3)
 
 
 def _normalize_item(raw: Dict) -> Dict:
