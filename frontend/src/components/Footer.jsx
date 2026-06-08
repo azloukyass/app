@@ -35,9 +35,9 @@ function CashIcon() {
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-300 mt-20" data-testid="site-footer">
+    <footer className="bg-black text-white/80 border-t border-red-600/30" data-testid="site-footer">
       {/* Trust strip */}
-      <div className="border-b border-slate-800">
+      <div className="border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { icon: Truck, t: "Livraison rapide", s: "Toute la Tunisie" },
@@ -46,10 +46,12 @@ export default function Footer() {
             { icon: Clock, t: "Support 7j/7", s: "8h - 20h" },
           ].map((it, i) => (
             <div key={i} className="flex items-center gap-3">
-              <it.icon className="w-7 h-7 text-red-500 flex-shrink-0" />
+              <div className="w-11 h-11 rounded-full bg-red-600/10 border border-red-600/30 flex items-center justify-center flex-shrink-0">
+                <it.icon className="w-5 h-5 text-red-500" />
+              </div>
               <div>
-                <div className="text-white font-medium text-sm">{it.t}</div>
-                <div className="text-slate-400 text-xs">{it.s}</div>
+                <div className="text-white font-bold uppercase text-sm tracking-wider">{it.t}</div>
+                <div className="text-white/50 text-xs">{it.s}</div>
               </div>
             </div>
           ))}
@@ -58,20 +60,17 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
         <div className="md:col-span-1">
-          <div className="flex items-center gap-3 mb-4">
-            <img src={LOGO_URL} alt="BENNOURI" className="h-14 w-14 object-contain bg-white p-1 rounded-sm" />
-            <div>
-              <div className="font-display text-xl font-bold text-white tracking-tight">BENNOURI</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Pièces Auto</div>
-            </div>
+          <div className="font-display text-2xl font-black text-white tracking-tight">
+            BENOURI <span className="text-red-600">PIASUTO</span>
           </div>
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-red-500 mt-1 mb-4">Pièces Auto Originales</div>
+          <p className="text-sm text-white/60 leading-relaxed">
             Le spécialiste des pièces détachées automobiles en Tunisie. Identification par VIN, livraison rapide, qualité garantie.
           </p>
         </div>
 
         <div>
-          <h4 className="text-white font-display font-semibold text-sm uppercase tracking-wider mb-4">Contact</h4>
+          <h4 className="text-white font-display font-bold text-sm uppercase tracking-wider mb-4">Contact</h4>
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-3">
               <MapPin className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0" />
@@ -79,15 +78,15 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <a href="tel:+21671123456" className="hover:text-white">+216 50 881 000</a>
+              <a href="tel:+21650881000" className="hover:text-red-400">+216 50 881 000</a>
             </li>
-             <li className="flex items-center gap-3">
+            <li className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <a href="tel:+21671123456" className="hover:text-white">+216 54 643 643</a>
+              <a href="tel:+21654643643" className="hover:text-red-400">+216 54 643 643</a>
             </li>
             <li className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <a href="mailto:contact@bennouri.com" className="hover:text-white">contact@bennouri.com</a>
+              <a href="mailto:contact@bennouri.com" className="hover:text-red-400">contact@bennouri.com</a>
             </li>
             <li className="flex items-center gap-3">
               <Clock className="w-4 h-4 text-red-500 flex-shrink-0" />
@@ -97,21 +96,21 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="text-white font-display font-semibold text-sm uppercase tracking-wider mb-4">Liens rapides</h4>
+          <h4 className="text-white font-display font-bold text-sm uppercase tracking-wider mb-4">Liens rapides</h4>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/recherche-vin" className="hover:text-white">Recherche par VIN</Link></li>
-            <li><Link to="/catalogue/mecanique" className="hover:text-white">Pièces Mécanique</Link></li>
-            <li><Link to="/catalogue/electrique" className="hover:text-white">Pièces Électrique</Link></li>
-            <li><Link to="/catalogue/carrosserie" className="hover:text-white">Pièces Carrosserie</Link></li>
-            <li><Link to="/compte" className="hover:text-white">Mon compte</Link></li>
-            <li><Link to="/contact" className="hover:text-white" data-testid="footer-contact-link">Nous contacter</Link></li>
-            <li><Link to="/impressum" className="hover:text-white" data-testid="footer-impressum-link">Mentions légales</Link></li>
+            <li><Link to="/recherche-vin" className="hover:text-red-400">Recherche par VIN</Link></li>
+            <li><Link to="/catalogue/mecanique" className="hover:text-red-400">Pièces Mécanique</Link></li>
+            <li><Link to="/catalogue/electrique" className="hover:text-red-400">Pièces Électrique</Link></li>
+            <li><Link to="/catalogue/carrosserie" className="hover:text-red-400">Pièces Carrosserie</Link></li>
+            <li><Link to="/compte" className="hover:text-red-400">Mon compte</Link></li>
+            <li><Link to="/contact" className="hover:text-red-400" data-testid="footer-contact-link">Nous contacter</Link></li>
+            <li><Link to="/impressum" className="hover:text-red-400" data-testid="footer-impressum-link">Mentions légales</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="text-white font-display font-semibold text-sm uppercase tracking-wider mb-4">Paiement</h4>
-          <p className="text-sm text-slate-400 mb-4">Paiement sécurisé à la livraison ou par carte bancaire.</p>
+          <h4 className="text-white font-display font-bold text-sm uppercase tracking-wider mb-4">Paiement</h4>
+          <p className="text-sm text-white/60 mb-4">Paiement sécurisé à la livraison ou par carte bancaire.</p>
           <div className="flex items-center gap-2" data-testid="footer-payment-icons">
             <VisaIcon />
             <MastercardIcon />
@@ -120,10 +119,10 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <div>© {new Date().getFullYear()} BENNOURI Pièces Auto — Tous droits réservés.</div>
-          <div className="font-mono-vin uppercase tracking-widest">Tunis · Tunisie</div>
+      <div className="border-t border-white/10 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
+          <div>© {new Date().getFullYear()} BENOURI PIASUTO — Tous droits réservés.</div>
+          <div className="font-mono uppercase tracking-widest text-red-500">Tunis · Tunisie</div>
         </div>
       </div>
     </footer>

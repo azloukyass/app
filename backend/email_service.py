@@ -186,7 +186,7 @@ def render_welcome(user_name: str, user_email: str) -> str:
           <ul style="margin:0;padding-left:20px;color:{BRAND_TEXT};">
             <li style="margin:4px 0;">Recherche par <strong>VIN</strong> ou par <strong>marque/modèle</strong></li>
             <li style="margin:4px 0;">Catalogue OEM officiel avec numéros de référence</li>
-            <li style="margin:4px 0;">Stock partenaire FadPro · pièces d'origine garanties</li>
+            <li style="margin:4px 0;">Pièces d'oriine garanties</li>
             <li style="margin:4px 0;">Paiement à la livraison sécurisé</li>
             <li style="margin:4px 0;">Livraison rapide partout en Tunisie</li>
           </ul>
@@ -195,7 +195,7 @@ def render_welcome(user_name: str, user_email: str) -> str:
     </table>
 
     <p style="margin:0 0 24px 0;">
-      Pour commencer, il vous suffit de saisir le <strong>VIN</strong> ou la <strong>plaque d'immatriculation</strong>
+      Pour commencer, il vous suffit de saisir le <strong>VIN</strong>
       de votre véhicule, et nous trouverons les pièces parfaitement compatibles.
     </p>
 

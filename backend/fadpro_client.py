@@ -52,7 +52,7 @@ async def _get_token(force: bool = False) -> Optional[str]:
 
 
 def _adjust_price(prix) -> Optional[float]:
-    """Apply markup: prix * 0.19 + 50 TND. Returns rounded to 3 decimals (TND)."""
+    """Apply markup: prix * 0.19 + (prix * 0.35). Returns rounded to 3 decimals (TND)."""
     if prix is None:
         return None
     try:
@@ -61,7 +61,7 @@ def _adjust_price(prix) -> Optional[float]:
         return None
     if p <= 0:
         return None
-    return round(p * (1 + PRICE_MARKUP_VAT) + PRICE_FIXED_FEE, 3)
+    return round(p * 1.19 * 1.35, 3)
 
 
 def _normalize_item(raw: Dict) -> Dict:
@@ -108,7 +108,7 @@ async def search_reference(reference: str) -> List[Dict]:
                 r = await cl.get(url, params={"refFour": ref}, headers=headers)
             if r.status_code != 200:
                 logger.warning(f"FadPro search failed: {r.status_code} {r.text[:200]}")
-                raise RuntimeError(f"Erreur FadPro {r.status_code}")
+                raise RuntimeError(f"Malheureusement, nous n'avons pas cet article en stock. Veuillez nous contacter par courriel ou par téléphone et nous trouverons une solution.")
             data = r.json()
             if not isinstance(data, list):
                 return []

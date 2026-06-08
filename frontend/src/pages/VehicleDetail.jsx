@@ -166,7 +166,7 @@ export default function VehicleDetail() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-red-300 mb-2">
-                      Catalogue OEM officiel PartSouq
+                      Catalogue OEM officiel
                     </div>
                     <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-2">
                       Explorer toutes les pièces d'origine

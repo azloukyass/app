@@ -1,161 +1,39 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ChevronLeft,
-  ChevronDown,
-  ChevronRight,
   Loader2,
   Hash,
   Car,
   Calendar,
   Fuel,
-  Database,
-  Wrench,
-  FolderTree,
-  X,
+  Search,
+  Package,
+  Sparkles,
 } from "lucide-react";
 import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import FadProSearch from "@/components/FadProSearch";
 
-function decodeHref(url) {
-  return (url || "").replaceAll("&amp;", "&");
-}
-
-function PartsTableModal({ open, subgroup, onClose }) {
-  if (!open || !subgroup) return null;
-  const { schema_label, schema_url, diagram_url, parts = [], loading, error, label } = subgroup;
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-2 sm:p-6 overflow-y-auto"
-      data-testid="parts-modal"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white w-full max-w-5xl rounded-sm shadow-2xl border border-slate-200 my-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50 sticky top-0">
-          <div className="min-w-0">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-red-600 mb-1">
-              Schéma OEM PartSouq
-            </div>
-            <h2 className="font-display text-xl font-bold text-slate-900 truncate" data-testid="parts-modal-title">
-              {schema_label || label || "Pièces"}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-200 rounded-sm transition-colors flex-shrink-0"
-            aria-label="Fermer"
-            data-testid="parts-modal-close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-6">
-          {loading && (
-            <div className="flex items-center justify-center py-16 text-slate-500" data-testid="parts-loading">
-              <Loader2 className="w-6 h-6 animate-spin mr-3" />
-              <span>Récupération des références OEM depuis PartSouq… (~10-20s)</span>
-            </div>
-          )}
-
-          {!loading && error && (
-            <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-sm text-sm" data-testid="parts-error">
-              {error}
-            </div>
-          )}
-
-          {!loading && !error && parts.length === 0 && (
-            <div className="text-center py-12 text-slate-500 text-sm" data-testid="parts-empty">
-              Aucune pièce trouvée pour cette sous-catégorie.
-            </div>
-          )}
-
-          {!loading && !error && parts.length > 0 && (
-            <>
-              {diagram_url && (
-                <div className="mb-6 flex justify-center bg-slate-50 border border-slate-200 rounded-sm p-4">
-                  <img
-                    src={diagram_url}
-                    alt="Schéma"
-                    className="max-h-80 object-contain"
-                    data-testid="parts-diagram"
-                    onError={(e) => (e.target.style.display = "none")}
-                  />
-                </div>
-              )}
-
-              <div className="overflow-x-auto border border-slate-200 rounded-sm">
-                <table className="w-full text-sm" data-testid="parts-table">
-                  <thead className="bg-slate-100 text-slate-700">
-                    <tr>
-                      <th className="text-left px-3 py-2 font-semibold border-b border-slate-200">Numéro</th>
-                      <th className="text-left px-3 py-2 font-semibold border-b border-slate-200">Nom</th>
-                      <th className="text-left px-3 py-2 font-semibold border-b border-slate-200">Code</th>
-                      <th className="text-left px-3 py-2 font-semibold border-b border-slate-200">Remplacement</th>
-                      <th className="text-left px-3 py-2 font-semibold border-b border-slate-200">Remarque</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parts.map((p, i) => (
-                      <tr
-                        key={`${p.number}-${i}`}
-                        className="border-b border-slate-100 hover:bg-amber-50/40"
-                        data-testid={`parts-row-${i}`}
-                      >
-                        <td className="px-3 py-2 font-mono-vin text-xs font-semibold text-slate-900 whitespace-nowrap" data-testid={`part-number-${i}`}>
-                          {p.number}
-                        </td>
-                        <td className="px-3 py-2 text-slate-700">{p.name || "—"}</td>
-                        <td className="px-3 py-2 text-slate-500 font-mono-vin text-xs">{p.code || "—"}</td>
-                        <td className="px-3 py-2 text-slate-600 text-xs">
-                          {p.replacement ? (
-                            <span className="font-mono-vin">{p.replacement}</span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-slate-500 text-xs italic">{p.note || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-                <span>{parts.length} référence(s) — Source: PartSouq</span>
-                {schema_url && (
-                  <a
-                    href={schema_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-red-600 hover:underline"
-                  >
-                    Voir sur PartSouq →
-                  </a>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+const SUGGESTIONS = [
+  "frein", "pompe", "filtre", "huile", "courroie", "bougie",
+  "amortisseur", "embrayage", "alternateur", "démarreur",
+  "phare", "rétroviseur", "radiateur", "thermostat",
+];
 
 export default function PartsouqCatalog() {
   const { vin } = useParams();
   const navigate = useNavigate();
   const { vehicle, setVehicle } = useCart();
-  const [loading, setLoading] = useState(!vehicle || vehicle.vin !== vin);
-  const [expandedGroups, setExpandedGroups] = useState({});
+  const [tecdoc, setTecdoc] = useState(null);
+  const [loadingVin, setLoadingVin] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeSubgroup, setActiveSubgroup] = useState(null);
+  const [results, setResults] = useState(null);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [error, setError] = useState("");
 
-  // Bootstrap: ensure we have vehicle data with tree
+  // Resolve VIN via RapidAPI TecDoc
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -164,127 +42,97 @@ export default function PartsouqCatalog() {
         navigate("/recherche-vin");
         return;
       }
-      if (vehicle && vehicle.vin === vin && Array.isArray(vehicle.partsouq_tree) && vehicle.partsouq_tree.length > 0) {
-        setLoading(false);
-        return;
-      }
-      // First call decode (idempotent — returns cached if available)
+      setLoadingVin(true);
       try {
-        setLoading(true);
-        await api.post("/vin/decode", { vin });
-      } catch (err) {
-        if (!cancelled) toast.error(formatApiError(err));
-      }
-      // Then poll status until tree is ready
-      let attempts = 0;
-      const poll = async () => {
-        if (cancelled || attempts > 12) {
-          setLoading(false);
-          return;
-        }
-        attempts += 1;
-        try {
-          const { data } = await api.get(`/vin/partsouq-status/${vin}`);
-          if (data.ready && Array.isArray(data.partsouq_tree) && data.partsouq_tree.length > 0) {
-            setVehicle(data);
-            setLoading(false);
-            return;
+        const { data } = await api.get(`/rapidapi/vin/${vin}`);
+        if (!cancelled) {
+          setTecdoc(data);
+          // Sync vehicle context (e.g. when user arrived via a deep link)
+          if (!vehicle || vehicle.vin !== vin) {
+            setVehicle({
+              vin,
+              make: data.manu_name,
+              model: data.model_name,
+              year: vehicle?.year || "—",
+              fuel: vehicle?.fuel || "—",
+              engine: vehicle?.engine || "—",
+              trim: vehicle?.trim || "—",
+              source: "tecdoc",
+            });
           }
-        } catch {}
-        setTimeout(poll, 6000);
-      };
-      poll();
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(formatApiError(err));
+          toast.error(formatApiError(err));
+        }
+      } finally {
+        if (!cancelled) setLoadingVin(false);
+      }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [vin]);
+    return () => { cancelled = true; };
+  }, [vin]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const tree = Array.isArray(vehicle?.partsouq_tree) ? vehicle.partsouq_tree : [];
-
-  // Filter tree by search term (matches group or any child label)
-  const filteredTree = useMemo(() => {
-    if (!search.trim()) return tree;
-    const q = search.toLowerCase();
-    return tree
-      .map((g) => {
-        const groupMatch = g.label.toLowerCase().includes(q) || (g.group_num || "").includes(q);
-        const matchedChildren = (g.children || []).filter((c) => c.label.toLowerCase().includes(q));
-        if (groupMatch) return g;
-        if (matchedChildren.length > 0) return { ...g, children: matchedChildren };
-        return null;
-      })
-      .filter(Boolean);
-  }, [tree, search]);
-
-  // Auto-expand all when searching
-  useEffect(() => {
-    if (search.trim()) {
-      const all = {};
-      filteredTree.forEach((g) => (all[g.id] = true));
-      setExpandedGroups(all);
-    }
-  }, [search, filteredTree]);
-
-  const toggleGroup = (id) => {
-    setExpandedGroups((s) => ({ ...s, [id]: !s[id] }));
-  };
-
-  const openSubgroup = async (group, child) => {
-    if (!child.cid || !child.url) {
-      toast.error("Sous-catégorie non disponible");
+  const runSearch = async (q) => {
+    const query = (q || search).trim();
+    if (query.length < 2) {
+      toast.error("Saisissez au moins 2 caractères");
       return;
     }
-    setActiveSubgroup({
-      label: child.label,
-      group_label: group.label,
-      loading: true,
-      parts: [],
-    });
+    if (!tecdoc?.model_id) {
+      toast.error("Véhicule non identifié");
+      return;
+    }
+    setLoadingSearch(true);
+    setError("");
     try {
-      const { data } = await api.post("/partsouq/subgroup", {
-        vin,
-        cid: child.cid,
-        url: decodeHref(child.url),
-        label: child.label,
+      const { data } = await api.get(`/rapidapi/oem-search`, {
+        params: { model_id: tecdoc.model_id, q: query, lang_id: 6 },
       });
-      setActiveSubgroup({
-        label: child.label,
-        group_label: group.label,
-        schema_label: data.schema_label,
-        schema_url: data.schema_url,
-        diagram_url: data.diagram_url,
-        parts: data.parts || [],
-        loading: false,
-      });
+      setResults(data);
     } catch (err) {
-      setActiveSubgroup({
-        label: child.label,
-        group_label: group.label,
-        loading: false,
-        parts: [],
-        error: formatApiError(err),
-      });
+      setError(formatApiError(err));
+      setResults(null);
+    } finally {
+      setLoadingSearch(false);
     }
   };
 
-  if (loading || !vehicle) {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    runSearch();
+  };
+
+  const handleSuggestion = (s) => {
+    setSearch(s);
+    runSearch(s);
+  };
+
+  // Group results by product name for cleaner display
+  const grouped = results?.items
+    ? Object.entries(
+        results.items.reduce((acc, it) => {
+          (acc[it.name] = acc[it.name] || []).push(it);
+          return acc;
+        }, {})
+      ).sort((a, b) => b[1].length - a[1].length)
+    : [];
+
+  if (loadingVin) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-500 px-4">
         <Loader2 className="w-8 h-8 animate-spin mb-4 text-red-600" />
-        <p className="text-sm">Récupération du catalogue PartSouq en cours… (~30-60s)</p>
+        <p className="text-sm">Identification du véhicule…</p>
       </div>
     );
   }
 
-  if (tree.length === 0) {
+  if (!tecdoc) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <Database className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-        <h2 className="font-display text-2xl font-bold text-slate-900 mb-2">Catalogue indisponible</h2>
-        <p className="text-slate-500 text-sm mb-6">
-          Le catalogue OEM PartSouq pour ce VIN n'est pas encore disponible. Réessayez dans un instant.
-        </p>
+        <Package className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+        <h2 className="font-display text-2xl font-bold text-slate-900 mb-2">Véhicule non trouvé</h2>
+        <p className="text-slate-500 text-sm mb-6">Aucune correspondance dans la base TecDoc pour ce VIN.</p>
         <Link to={`/vehicule/${vin}`} className="text-red-600 hover:underline text-sm">
           ← Retour au véhicule
         </Link>
@@ -306,110 +154,231 @@ export default function PartsouqCatalog() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wider mb-4">
-            <span className="text-slate-300 font-bold">Catalogue OEM:</span>
+            <span className="text-slate-300 font-bold">Catalogue OEM TecDoc:</span>
             <span className="bn-chip bg-white/10 text-white border-white/20">
-              <Car className="w-3 h-3" /> {vehicle.make}
+              <Car className="w-3 h-3" /> {tecdoc.manu_name}
             </span>
-            <span className="bn-chip bg-white/10 text-white border-white/20">{vehicle.model}</span>
-            <span className="bn-chip bg-white/10 text-white border-white/20">
-              <Calendar className="w-3 h-3" /> {vehicle.year || "—"}
-            </span>
-            <span className="bn-chip bg-white/10 text-white border-white/20">
-              <Fuel className="w-3 h-3" /> {vehicle.fuel}
-            </span>
+            <span className="bn-chip bg-white/10 text-white border-white/20">{tecdoc.model_name}</span>
+            {vehicle?.year && vehicle.year !== "—" && (
+              <span className="bn-chip bg-white/10 text-white border-white/20">
+                <Calendar className="w-3 h-3" /> {vehicle.year}
+              </span>
+            )}
+            {vehicle?.fuel && vehicle.fuel !== "—" && (
+              <span className="bn-chip bg-white/10 text-white border-white/20">
+                <Fuel className="w-3 h-3" /> {vehicle.fuel}
+              </span>
+            )}
             <span className="bn-chip bg-red-600/30 text-red-200 border-red-500/40 font-mono-vin">
-              <Hash className="w-3 h-3" /> {vehicle.vin}
+              <Hash className="w-3 h-3" /> {vin}
             </span>
           </div>
 
           <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
-            Catalogue complet OEM
+            Catalogue OEM officiel
           </h1>
           <p className="text-slate-300 mt-2 text-sm">
-            {tree.length} groupes — Cliquez sur une sous-catégorie pour voir les numéros de pièces officiels
+            Recherchez une pièce par nom (en français) — modelId TecDoc&nbsp;:{" "}
+            <span className="font-mono-vin text-red-300">{tecdoc.model_id}</span>
           </p>
         </div>
       </div>
 
       {/* Search bar */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filtrer par nom de pièce (ex: pompe à eau, frein…)"
-            className="w-full px-4 py-2 border border-slate-300 rounded-sm text-sm focus:outline-none focus:border-red-500"
-            data-testid="catalog-search"
-          />
-        </div>
-      </div>
-
-      {/* Tree */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white border border-slate-200 rounded-sm divide-y divide-slate-100">
-          {filteredTree.map((group) => {
-            const isOpen = !!expandedGroups[group.id];
-            const childCount = (group.children || []).length;
-            return (
-              <div key={group.id} data-testid={`group-${group.id}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <form onSubmit={handleSubmit} className="flex items-center gap-2" data-testid="oem-search-form">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher une pièce (ex: frein, pompe, filtre, huile…)"
+                className="w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20"
+                data-testid="oem-search-input"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loadingSearch}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white font-semibold px-5 py-2.5 rounded-sm transition-colors inline-flex items-center gap-2 whitespace-nowrap"
+              data-testid="oem-search-btn"
+            >
+              {loadingSearch ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              Rechercher
+            </button>
+          </form>
+          {!results && !loadingSearch && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 inline-flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Suggestions :
+              </span>
+              {SUGGESTIONS.map((s) => (
                 <button
-                  onClick={() => toggleGroup(group.id)}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left"
-                  data-testid={`group-toggle-${group.id}`}
+                  key={s}
+                  onClick={() => handleSuggestion(s)}
+                  className="text-xs px-2.5 py-1 border border-slate-200 rounded-sm bg-white hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-colors"
+                  data-testid={`suggestion-${s}`}
                 >
-                  {isOpen ? (
-                    <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                  )}
-                  {group.group_num && (
-                    <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-sm font-mono-vin">
-                      {group.group_num}
-                    </span>
-                  )}
-                  <span className="font-semibold text-slate-900 flex-1">{group.label}</span>
-                  <span className="text-xs text-slate-400">{childCount} sous-cat.</span>
+                  {s}
                 </button>
-                {isOpen && childCount > 0 && (
-                  <div className="bg-slate-50/50 px-4 pb-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
-                      {group.children.map((child) => (
-                        <button
-                          key={child.id}
-                          onClick={() => openSubgroup(group, child)}
-                          disabled={!child.has_link}
-                          className={`flex items-center gap-2 text-left text-sm px-3 py-2 rounded-sm border transition-colors ${
-                            child.has_link
-                              ? "border-slate-200 bg-white hover:border-red-300 hover:bg-amber-50 text-slate-700 hover:text-red-700 cursor-pointer"
-                              : "border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed"
-                          }`}
-                          data-testid={`subgroup-${child.id}`}
-                          title={child.has_link ? "Voir les numéros OEM" : "Sous-catégorie non disponible"}
-                        >
-                          <Wrench className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
-                          <span className="truncate">{child.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          {filteredTree.length === 0 && (
-            <div className="px-4 py-8 text-center text-sm text-slate-400">
-              Aucun groupe ne correspond à votre recherche.
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      <PartsTableModal
-        open={!!activeSubgroup}
-        subgroup={activeSubgroup}
-        onClose={() => setActiveSubgroup(null)}
-      />
+      {/* Results */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-sm text-sm" data-testid="oem-error">
+            {error}
+          </div>
+        )}
+
+        {loadingSearch && (
+          <div className="flex items-center justify-center py-20 text-slate-500" data-testid="oem-loading">
+            <Loader2 className="w-7 h-7 animate-spin mr-3 text-red-600" />
+            <span>Recherche TecDoc en cours…</span>
+          </div>
+        )}
+
+        {!loadingSearch && !results && !error && (
+          <div className="text-center py-16">
+            <Search className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+            <p className="text-slate-500 text-sm">
+              Saisissez le nom d'une pièce pour afficher les références OEM compatibles
+            </p>
+          </div>
+        )}
+
+        {!loadingSearch && results && (
+          <>
+            <div className="bg-white border-l-4 border-red-600 pl-4 py-3 pr-4 rounded-sm shadow-sm flex items-center justify-between mb-6" data-testid="oem-summary">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Résultats pour
+                </div>
+                <div className="font-mono-vin font-semibold text-slate-800 text-sm">"{search}"</div>
+              </div>
+              <div className="text-right">
+                <div className="font-display text-2xl font-bold text-red-600">{results.count}</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500">références OEM</div>
+              </div>
+            </div>
+
+            {results.count === 0 ? (
+              <div className="text-center py-16 text-slate-500">
+                <Package className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                <p className="text-sm">Aucune pièce trouvée pour cette recherche.</p>
+                <p className="text-xs mt-2">Essayez un autre terme (ex: frein, pompe, filtre, embrayage…)</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {grouped.map(([name, items]) => (
+                  <div
+                    key={name}
+                    className="bg-white border border-slate-200 rounded-sm overflow-hidden"
+                    data-testid={`oem-group-${name.replace(/\s+/g, "-")}`}
+                  >
+                    <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+                      <h3 className="font-display font-bold text-slate-900 text-base">{name}</h3>
+                      <span className="text-xs font-semibold bg-red-100 text-red-700 px-2.5 py-0.5 rounded-sm">
+                        {items.length} référence{items.length > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                          <tr>
+                            <th className="text-left px-4 py-2.5 font-semibold w-1/3">Référence OEM</th>
+                            <th className="text-left px-4 py-2.5 font-semibold">Désignation</th>
+                            <th className="text-right px-4 py-2.5 font-semibold">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((it, i) => (
+                            <tr
+                              key={`${it.ref}-${i}`}
+                              className="border-b border-slate-50 hover:bg-amber-50/40 transition-colors"
+                              data-testid={`oem-row-${name.replace(/\s+/g, "-")}-${i}`}
+                            >
+                              <td className="px-4 py-2.5 font-mono-vin font-semibold text-slate-900 whitespace-nowrap">
+                                {it.ref}
+                              </td>
+                              <td className="px-4 py-2.5 text-slate-600 text-xs">{it.name}</td>
+                              <td className="px-4 py-2.5 text-right">
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(it.ref);
+                                    toast.success(`Référence ${it.ref} copiée. Collez-la dans la recherche FadPro.`);
+                                    // Smooth scroll to FadPro search
+                                    const el = document.querySelector('[data-testid="fadpro-search-input"]');
+                                    if (el) {
+                                      el.scrollIntoView({ behavior: "smooth", block: "center" });
+                                      el.focus();
+                                    }
+                                  }}
+                                  className="text-xs font-semibold bg-slate-900 hover:bg-red-600 text-white px-3 py-1.5 rounded-sm transition-colors"
+                                  data-testid={`oem-find-stock-${it.ref}`}
+                                  title="Copier la référence et vérifier le stock chez FadPro"
+                                >
+                                  Vérifier stock →
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Hidden FadPro instance that listens to global events */}
+      <FadProAutoOpen />
+    </div>
+  );
+}
+
+/**
+ * Renders FadProSearch in a hidden form, listens for "fadpro-search" event and
+ * auto-fills + submits when an OEM "Vérifier stock" button is clicked.
+ */
+function FadProAutoOpen() {
+  const [pendingRef, setPendingRef] = useState("");
+
+  useEffect(() => {
+    const handler = (e) => {
+      const ref = e?.detail?.ref;
+      if (!ref) return;
+      setPendingRef(ref);
+    };
+    window.addEventListener("fadpro-search", handler);
+    return () => window.removeEventListener("fadpro-search", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!pendingRef) return;
+    const input = document.querySelector('[data-testid="fadpro-search-input"]');
+    const btn = document.querySelector('[data-testid="fadpro-search-btn"]');
+    if (input && btn) {
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+      setter.call(input, pendingRef);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      setTimeout(() => btn.click(), 50);
+    }
+    setPendingRef("");
+  }, [pendingRef]);
+
+  return (
+    <div className="fixed -bottom-1 -right-1 opacity-0 pointer-events-none" aria-hidden="true">
+      <FadProSearch inline />
     </div>
   );
 }

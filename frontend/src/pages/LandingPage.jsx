@@ -1,85 +1,42 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { ArrowRight, Search, Truck, Shield, Award, ChevronRight, Hash, Zap, Wrench, CarFront, Filter, ListOrdered, ShoppingCart, Package, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import {
+  ArrowRight,
+  Search,
+  Truck,
+  Shield,
+  Award,
+  Headphones,
+  Hash,
+  CheckCircle2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api, formatApiError } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { BRANDS, logoUrl } from "@/data/brands";
+import { OilBottle, BrakeDisc, CarBattery, OilFilter, Engine, ShockAbsorber, SparkPlug } from "@/components/ProductIcons";
 
-const HERO_IMG =
-  "https://images.pexels.com/photos/10905352/pexels-photo-10905352.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=900&w=1600";
+const POPULAR_CATEGORIES = [
+  { key: "freinage", label: "Freinage", Icon: BrakeDisc, count: "1 200+ pièces" },
+  { key: "huiles", label: "Huiles & Liquides", Icon: OilBottle, count: "850+ pièces" },
+  { key: "moteur", label: "Moteur", Icon: Engine, count: "3 500+ pièces" },
+  { key: "batterie", label: "Batterie", Icon: CarBattery, count: "320+ pièces" },
+  { key: "filtres", label: "Filtres", Icon: OilFilter, count: "1 100+ pièces" },
+  { key: "suspension", label: "Suspension", Icon: ShockAbsorber, count: "640+ pièces" },
+];
 
-const MercedesStar = () => (
-  <svg viewBox="-50 -50 100 100" className="max-h-10 max-w-[70%]" fill="none" stroke="#0f172a" strokeWidth="6">
-    <circle r="44" />
-    <path d="M0 -38 L0 0 L-33 19 Z M0 0 L33 19 L0 -38 Z" fill="#0f172a" stroke="none" />
-    <path d="M0 0 L-33 19 L33 19 Z" fill="#0f172a" stroke="none" opacity="0.65" />
-  </svg>
-);
-
-const BRAND_LOGOS = [
-  { name: "Volkswagen", slug: "volkswagen" },
-  { name: "Mercedes-Benz", slug: "mercedes", custom: <MercedesStar /> },
-  { name: "Audi", slug: "audi" },
-  { name: "BMW", slug: "bmw" },
-  { name: "Peugeot", slug: "peugeot" },
-  { name: "Renault", slug: "renault" },
-  { name: "Citroën", slug: "citroen" },
-  { name: "Toyota", slug: "toyota" },
-  { name: "Hyundai", slug: "hyundai" },
-  { name: "Kia", slug: "kia" },
-  { name: "Dacia", slug: "dacia" },
-  { name: "Ford", slug: "ford" },
+const TRUST_BADGES = [
+  { Icon: Truck, title: "Livraison rapide", sub: "Partout en Tunisie" },
+  { Icon: Shield, title: "Produits originaux", sub: "Qualité garantie" },
+  { Icon: Award, title: "Meilleurs prix", sub: "Offres imbattables" },
+  { Icon: Headphones, title: "Support client", sub: "À votre écoute" },
 ];
 
 export default function LandingPage() {
-  const [vin, setVin] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setVehicle } = useCart();
-
-  // Reset VIN input when landing page mounts (fixes back-navigation bug)
-  useEffect(() => {
-    setVin("");
-  }, []);
-
-  // Manual filter state
-  const [catalog, setCatalog] = useState(null);
-  const [fMake, setFMake] = useState("");
-  const [fModel, setFModel] = useState("");
-  const [fYear, setFYear] = useState("");
-  const [fFuel, setFFuel] = useState("");
-  const [manualLoading, setManualLoading] = useState(false);
-
-  useEffect(() => {
-    api.get("/vehicles/catalog").then((r) => setCatalog(r.data)).catch(() => {});
-  }, []);
-
-  const brands = catalog?.brands || [];
-  const brandData = (fMake && catalog?.data?.[fMake]) || null;
-  const models = brandData?.models || [];
-  const years = brandData?.years || [];
-  const fuels = brandData?.fuels || [];
-
-  const handleManual = async (e) => {
-    e.preventDefault();
-    if (!fMake || !fModel || !fYear || !fFuel) {
-      toast.error("Sélectionnez tous les champs");
-      return;
-    }
-    setManualLoading(true);
-    try {
-      const { data } = await api.post("/vehicles/manual", {
-        make: fMake, model: fModel, year: fYear, fuel: fFuel,
-      });
-      setVehicle(data);
-      navigate(`/vehicule/${data.vin}`);
-    } catch (err) {
-      toast.error(formatApiError(err));
-    } finally {
-      setManualLoading(false);
-    }
-  };
+  const [vin, setVin] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleVin = async (e) => {
     e.preventDefault();
@@ -90,9 +47,30 @@ export default function LandingPage() {
     }
     setLoading(true);
     try {
-      const { data } = await api.post("/vin/decode", { vin: v });
-      setVehicle(data);
-      navigate(`/vehicule/${data.vin}`);
+      // Try TecDoc first via RapidAPI
+      try {
+        const { data: td } = await api.get(`/rapidapi/vin/${v}`);
+        // Build a vehicle object compatible with VehicleDetail
+        const vehicle = {
+          vin: v,
+          make: td.manu_name,
+          model: td.model_name,
+          year: "—",
+          fuel: "—",
+          engine: "—",
+          trim: "—",
+          source: "tecdoc",
+          tecdoc_model_id: td.model_id,
+        };
+        setVehicle(vehicle);
+        navigate(`/vehicule/${v}`);
+        return;
+      } catch (_) {
+        // Fallback to NHTSA / WMI decoder
+        const { data } = await api.post("/vin/decode", { vin: v });
+        setVehicle(data);
+        navigate(`/vehicule/${data.vin}`);
+      }
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -101,174 +79,189 @@ export default function LandingPage() {
   };
 
   return (
-    <div data-testid="landing-page">
+    <div className="bg-black text-white" data-testid="landing-page">
       {/* Hero */}
-      <section className="relative bn-grid-overlay overflow-hidden" style={{ backgroundImage: `url(${HERO_IMG})`, backgroundSize: "cover", backgroundPosition: "center" }}>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-white bn-fade-up">
-              <div className="bn-chip bg-red-600/20 text-red-300 border-red-600/30 mb-6" data-testid="hero-chip">
-                <Hash className="w-3 h-3" /> Identification 100% précise par VIN
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight">
-                La bonne pièce, <br />
-                <span className="text-red-500">à coup sûr.</span>
-              </h1>
-              <p className="mt-6 text-lg text-slate-200 font-extrabold max-w-xl leading-relaxed">
-                Entrez votre numéro de châssis (VIN) et accédez instantanément à l'ensemble du catalogue de pièces compatibles avec votre véhicule — Mécanique, Électrique et Carrosserie.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-6 text-sm">
-                <span className="inline-flex items-center gap-2"><Truck className="w-4 h-4 text-red-500" /> Livraison Tunisie</span>
-                <span className="inline-flex items-center gap-2"><Shield className="w-4 h-4 text-red-500" /> Qualité garantie</span>
-                <span className="inline-flex items-center gap-2"><Award className="w-4 h-4 text-red-500" /> Marques premium</span>
-              </div>
+      <section className="relative overflow-hidden bg-black" data-testid="hero-section">
+        {/* Decorative grid */}
+        <div className="absolute inset-0 opacity-[0.05]" style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
+          backgroundSize: "50px 50px",
+        }} />
+        {/* Soft red glow */}
+        <div className="absolute -right-40 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 grid lg:grid-cols-12 gap-10 items-center">
+          {/* Left: Big title + small VIN form */}
+          <div className="lg:col-span-6">
+            <div className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-red-500 mb-4">
+              <span className="w-6 h-px bg-red-500"></span> Pièces auto en Tunisie
+            </div>
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight">
+              PIÈCES AUTO<br />
+              <span className="text-red-600">ORIGINALES</span>
+            </h1>
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/90 font-semibold">
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-red-500" /> Qualité garantie</span>
+              <span className="text-white/30">|</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-red-500" /> Meilleurs prix</span>
+              <span className="text-white/30">|</span>
+              <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-red-500" /> Livraison rapide</span>
             </div>
 
-            {/* VIN form card */}
-            <form
-              onSubmit={handleVin}
-              className="bg-white rounded-sm shadow-2xl p-8 border-t-4 border-red-600 bn-fade-up"
-              data-testid="vin-search-form"
-            >
-              <h2 className="font-display font-bold text-2xl text-slate-900">Trouvez vos pièces</h2>
-              <p className="text-sm text-slate-500 mt-1">Entrez votre numéro VIN (17 caractères en général)</p>
-
-              <label className="block mt-6 text-xs font-semibold uppercase tracking-wider text-slate-700">
-                Numéro VIN
-              </label>
-              <div className="relative mt-2">
-                <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            {/* Small VIN search */}
+            <form onSubmit={handleVin} className="mt-8 max-w-xl" data-testid="hero-vin-form">
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-2">
+                Trouvez vos pièces · Saisissez votre VIN
+              </div>
+              <div className="flex bg-white rounded-sm overflow-hidden shadow-lg">
+                <div className="flex items-center pl-3 text-black/40">
+                  <Hash className="w-4 h-4" />
+                </div>
                 <input
                   type="text"
                   value={vin}
                   onChange={(e) => setVin(e.target.value.toUpperCase())}
-                  placeholder="WVWZZZ1KZ8W123456"
+                  placeholder="Ex: VF15R0K0H48649991"
                   maxLength={17}
-                  className="w-full pl-12 pr-4 py-4 text-lg font-mono-vin uppercase border-2 border-slate-300 rounded-sm focus:border-red-600 focus:ring-1 focus:ring-red-600 outline-none transition-colors"
-                  data-testid="landing-vin-input"
+                  className="flex-1 px-2 py-2.5 text-sm font-mono text-black focus:outline-none placeholder:text-black/30"
+                  data-testid="hero-vin-input"
                 />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 px-5 text-white text-sm font-bold uppercase tracking-wider transition-colors flex items-center gap-2"
+                  data-testid="hero-vin-submit"
+                >
+                  {loading ? "..." : <>Rechercher <ArrowRight className="w-4 h-4" /></>}
+                </button>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-6 w-full bn-btn-primary text-lg py-4 disabled:opacity-60 disabled:cursor-not-allowed"
-                data-testid="landing-vin-submit"
-              >
-                {loading ? "Identification..." : (<>Valider <ArrowRight className="w-5 h-5" /></>)}
-              </button>
-
-              <div className="mt-5 pt-5 border-t border-slate-200 text-xs text-slate-500 flex items-start gap-2">
-                <Search className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>Le VIN se trouve sur la carte grise (champ E) ou gravé sur le châssis. Exemple test : <button type="button" onClick={() => setVin("WVWZZZ1KZ8W123456")} className="font-mono-vin text-slate-700 hover:text-red-600 underline" data-testid="vin-example-btn">WVWZZZ1KZ8W123456</button></span>
+              <div className="mt-2 text-[11px] text-white/50">
+                17 caractères en général · {vin.length}/17
               </div>
             </form>
+
+            <div className="mt-8">
+              <Link
+                to="/recherche-vin"
+                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm transition-colors shadow-lg shadow-red-900/30"
+                data-testid="hero-cta-discover"
+              >
+                Découvrir nos produits <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Right: Hero image / product showcase */}
+          <div className="lg:col-span-6 relative">
+            <div className="relative aspect-[5/4] rounded-sm overflow-hidden border border-white/10 bg-gradient-to-br from-black via-zinc-900 to-black">
+              {/* Background SVG composition */}
+              <div className="absolute inset-0 grid grid-cols-3 gap-2 p-4 opacity-90">
+                <div className="flex items-end justify-center">
+                  <BrakeDisc className="w-full max-w-[180px] drop-shadow-2xl" />
+                </div>
+                <div className="flex items-center justify-center">
+                  <Engine className="w-full max-w-[200px] drop-shadow-2xl" />
+                </div>
+                <div className="flex items-end justify-center">
+                  <OilBottle className="w-full max-w-[150px] drop-shadow-2xl" />
+                </div>
+                <div className="flex items-start justify-center">
+                  <OilFilter className="w-full max-w-[140px] drop-shadow-2xl" />
+                </div>
+                <div className="flex items-center justify-center">
+                  <CarBattery className="w-full max-w-[170px] drop-shadow-2xl" />
+                </div>
+                <div className="flex items-start justify-center">
+                  <ShockAbsorber className="w-full max-w-[120px] drop-shadow-2xl" />
+                </div>
+              </div>
+              {/* Red shine corner */}
+              <div className="absolute -top-20 -right-20 w-60 h-60 bg-red-600/30 rounded-full blur-3xl" />
+              <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-red-600/20 rounded-full blur-3xl" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Manual vehicle filter */}
-      <section className="bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="text-center mb-8">
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2 inline-flex items-center gap-2 justify-center"><Filter className="w-3.5 h-3.5" /> Sans VIN ?</div>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">Trouvez des pièces pour votre véhicule</h2>
-            <p className="text-slate-500 mt-2 max-w-2xl mx-auto">Sélectionnez votre marque, modèle, année et type de carburant.</p>
-          </div>
-
-          <form onSubmit={handleManual} className="bg-white border border-slate-200 rounded-sm p-6 sm:p-8 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="manual-filter-form">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Marque</label>
-              <select
-                value={fMake}
-                onChange={(e) => { setFMake(e.target.value); setFModel(""); setFYear(""); setFFuel(""); }}
-                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm"
-                data-testid="filter-make"
-              >
-                <option value="">— Choisir —</option>
-                {brands.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
+      {/* Trust badges row */}
+      <section className="bg-zinc-950 border-y border-white/10" data-testid="trust-badges">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {TRUST_BADGES.map((b) => (
+            <div key={b.title} className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-red-600/10 border border-red-600/30 rounded-full flex items-center justify-center flex-shrink-0">
+                <b.Icon className="w-6 h-6 text-red-500" strokeWidth={1.8} />
+              </div>
+              <div>
+                <div className="font-display font-bold text-white uppercase text-sm tracking-wide">{b.title}</div>
+                <div className="text-xs text-white/60 mt-0.5">{b.sub}</div>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Modèle</label>
-              <select
-                value={fModel}
-                onChange={(e) => setFModel(e.target.value)}
-                disabled={!fMake}
-                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm disabled:bg-slate-100 disabled:text-slate-400"
-                data-testid="filter-model"
-              >
-                <option value="">— Choisir —</option>
-                {models.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Année</label>
-              <select
-                value={fYear}
-                onChange={(e) => setFYear(e.target.value)}
-                disabled={!fMake}
-                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm disabled:bg-slate-100 disabled:text-slate-400"
-                data-testid="filter-year"
-              >
-                <option value="">— Choisir —</option>
-                {years.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">Carburant</label>
-              <select
-                value={fFuel}
-                onChange={(e) => setFFuel(e.target.value)}
-                disabled={!fMake}
-                className="w-full px-3 py-3 border border-slate-300 rounded-sm focus:border-red-600 outline-none bg-white text-sm disabled:bg-slate-100 disabled:text-slate-400"
-                data-testid="filter-fuel"
-              >
-                <option value="">— Choisir —</option>
-                {fuels.map((f) => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                disabled={manualLoading}
-                className="w-full bn-btn-primary py-3 disabled:opacity-60"
-                data-testid="filter-submit"
-              >
-                {manualLoading ? "…" : (<><Search className="w-4 h-4" /> Rechercher</>)}
-              </button>
-            </div>
-          </form>
+          ))}
         </div>
       </section>
 
-      {/* Constructeurs automobile */}
-      <section className="bg-slate-50 border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-3">
+      {/* Catégories populaires */}
+      <section className="bg-black" data-testid="popular-categories">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-end justify-between mb-8">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Constructeurs</div>
-              <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-2">Découvrez nos catégories</div>
+              <h2 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight uppercase">
+                Catégories populaires
+              </h2>
+            </div>
+            <Link to="/recherche-vin" className="text-sm font-semibold text-red-500 hover:text-red-400 inline-flex items-center gap-1">
+              Voir toutes les catégories <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {POPULAR_CATEGORIES.map((c) => (
+              <Link
+                key={c.key}
+                to="/recherche-vin"
+                className="group relative bg-zinc-900 border border-white/10 hover:border-red-600/60 rounded-sm overflow-hidden aspect-square flex flex-col items-center justify-center p-4 transition-all hover:bg-zinc-900/80 hover:shadow-lg hover:shadow-red-900/30"
+                data-testid={`popular-cat-${c.key}`}
+              >
+                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-red-600/10 rounded-full blur-2xl group-hover:bg-red-600/30 transition-colors" />
+                <div className="relative w-full h-2/3 flex items-center justify-center">
+                  <c.Icon className="w-full h-full max-w-[80px] group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="relative mt-2 text-center">
+                  <div className="font-display font-bold text-white text-sm uppercase tracking-wide">{c.label}</div>
+                  <div className="text-[10px] text-red-400 mt-0.5">{c.count}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Constructeurs / Brands */}
+      <section className="bg-zinc-950 border-t border-white/10" data-testid="brands-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-500 mb-2">Constructeurs</div>
+              <h2 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight uppercase">
                 Constructeurs automobile
               </h2>
-              <p className="text-slate-500 mt-2 text-sm">
+              <p className="text-white/50 mt-2 text-sm">
                 {BRANDS.length} marques · plus de {BRANDS.reduce((s, b) => s + b.models.length, 0)} modèles couverts
               </p>
             </div>
+            <div className="text-xs text-white/40 italic">
+              Survolez un logo pour voir la couleur de la marque
+            </div>
           </div>
 
-          <div
-            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10"
-            data-testid="brands-grid"
-          >
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10" data-testid="brands-grid">
             {BRANDS.map((b) => (
               <Link
                 key={b.slug}
                 to={`/marque/${b.slug}`}
                 className="brand-card group flex flex-col items-center justify-center p-3 transition-all duration-300"
-                style={{
-                  "--brand-color": b.color,
-                }}
+                style={{ "--brand-color": b.color }}
                 data-testid={`brand-card-${b.slug}`}
               >
                 <div className="brand-logo-wrap relative w-full h-20 sm:h-24 flex items-center justify-center">
@@ -283,14 +276,11 @@ export default function LandingPage() {
                       if (fb) fb.style.display = "block";
                     }}
                   />
-                  <span
-                    className="brand-logo-fallback font-display font-bold text-slate-700 group-hover:text-[color:var(--brand-color)] transition-colors text-lg"
-                    style={{ display: "none" }}
-                  >
+                  <span className="brand-logo-fallback font-display font-bold text-white/80 group-hover:text-[color:var(--brand-color)] transition-colors text-lg" style={{ display: "none" }}>
                     {b.name}
                   </span>
                 </div>
-                <div className="mt-3 text-[10px] sm:text-xs font-semibold text-slate-500 group-hover:text-[color:var(--brand-color)] transition-colors uppercase tracking-wider text-center truncate w-full">
+                <div className="mt-3 text-[10px] sm:text-xs font-semibold text-white/60 group-hover:text-[color:var(--brand-color)] transition-colors uppercase tracking-wider text-center truncate w-full">
                   {b.name}
                 </div>
               </Link>
@@ -301,136 +291,34 @@ export default function LandingPage() {
         <style>{`
           .brand-card { will-change: transform; }
           .brand-card .brand-logo {
-            filter: grayscale(1) brightness(0.75) contrast(1.1);
-            opacity: 0.65;
+            filter: grayscale(1) brightness(1.4) contrast(0.8);
+            opacity: 0.55;
           }
           .brand-card:hover .brand-logo {
-            filter: none;
+            filter: brightness(1.1);
             opacity: 1;
             transform: scale(1.12);
           }
         `}</style>
       </section>
 
-      {/* How it works */}
-      <section className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-12">
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Comment ça marche</div>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-slate-900 tracking-tight">Votre pièce en 4 étapes simples</h2>
-            <p className="text-slate-500 mt-3 max-w-2xl mx-auto">De l'identification du véhicule à la livraison à domicile — un processus pensé pour vous faire gagner du temps.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 bn-stagger">
-            {[
-              {
-                n: "01",
-                Icon: Hash,
-                title: "Identifiez votre véhicule",
-                desc: "Saisissez votre numéro VIN ou choisissez manuellement la marque, le modèle, l'année et le carburant.",
-              },
-              {
-                n: "02",
-                Icon: ListOrdered,
-                title: "Choisissez la catégorie",
-                desc: "Mécanique, Électrique ou Carrosserie — puis affinez par sous-famille (moteur, freinage, éclairage…).",
-              },
-              {
-                n: "03",
-                Icon: ShoppingCart,
-                title: "Ajoutez au panier",
-                desc: "Sélectionnez les pièces 100% compatibles, vérifiez les marques équipementiers et validez votre commande.",
-              },
-              {
-                n: "04",
-                Icon: Package,
-                title: "Recevez chez vous",
-                desc: "Livraison rapide partout en Tunisie. Paiement à la livraison en toute sécurité.",
-              },
-            ].map((s) => (
-              <div key={s.n} className="relative bg-slate-50 border border-slate-200 p-6 rounded-sm group hover:border-red-600 hover:bg-white transition-all" data-testid={`step-${s.n}`}>
-                <div className="absolute top-4 right-4 font-display font-bold text-3xl text-slate-200 group-hover:text-red-100 transition-colors">{s.n}</div>
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-sm bg-red-600 text-white mb-4">
-                  <s.Icon className="w-6 h-6" />
-                </div>
-                <h3 className="font-display font-bold text-lg text-slate-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 grid sm:grid-cols-3 gap-4">
-            {[
-              { Icon: CheckCircle2, t: "Aucun risque d'erreur", s: "Compatibilité garantie via VIN ou modèle exact" },
-              { Icon: Truck, t: "Livraison rapide", s: "Délais courts dans toute la Tunisie" },
-              { Icon: Shield, t: "Paiement sécurisé", s: "À la livraison ou par carte bancaire" },
-            ].map((p, i) => (
-              <div key={i} className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-sm">
-                <p.Icon className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-display font-semibold text-emerald-900 text-sm">{p.t}</div>
-                  <div className="text-xs text-emerald-700 mt-0.5">{p.s}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Brands */}
-      <section className="bg-white border-y border-slate-200 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-600 mb-2">Compatibilité</div>
-            <h2 className="font-display font-bold text-3xl text-slate-900">Toutes les grandes marques</h2>
-            <p className="text-slate-500 mt-2">Volkswagen, Mercedes, Audi, BMW, Peugeot, Renault et bien plus.</p>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-            {BRAND_LOGOS.map((b) => (
-              <div key={b.name} className="bn-card aspect-[3/2] flex flex-col items-center justify-center text-center p-4 group" data-testid={`brand-${b.slug}`}>
-                {b.custom ? b.custom : (
-                  <img
-                    src={`https://cdn.simpleicons.org/${b.slug}/0f172a`}
-                    alt={b.name}
-                    className="max-h-10 max-w-[70%] object-contain opacity-85 group-hover:opacity-100 transition-opacity duration-300"
-                    loading="lazy"
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                )}
-                <div className="text-[10px] uppercase tracking-widest text-slate-500 mt-3 font-semibold">{b.name}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA strip */}
-      <section className="bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid lg:grid-cols-2 gap-10 items-center">
+      {/* Final CTA strip */}
+      <section className="bg-red-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center gap-6 justify-between">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-red-500 mb-3">Pourquoi BENNOURI ?</div>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold leading-tight">Le bon mécanicien commence avec la bonne pièce.</h2>
-            <p className="mt-4 text-slate-300 leading-relaxed max-w-xl">
-              Plus de fausses commandes, plus de pièces incompatibles. Notre système VIN garantit la pièce exacte pour votre véhicule — du joint de culasse au phare arrière.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link to="/recherche-vin" className="bn-btn-primary" data-testid="cta-vin-search">
-                Rechercher par VIN <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/80 mb-2">Besoin d'aide ?</div>
+            <h3 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight">
+              Notre équipe est à votre service
+            </h3>
+            <p className="text-white/90 text-sm mt-1">Du lundi au samedi · 8h00 - 20h00 · Tunis, Tunisie</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { v: "10k+", l: "Références" },
-              { v: "48h", l: "Livraison max" },
-              { v: "200+", l: "Marques" },
-              { v: "98%", l: "Clients satisfaits" },
-            ].map((s, i) => (
-              <div key={i} className="border border-slate-700 p-6 rounded-sm bg-slate-800/50">
-                <div className="font-display text-4xl font-bold text-red-500">{s.v}</div>
-                <div className="text-sm text-slate-400 mt-1 uppercase tracking-wider">{s.l}</div>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-3">
+            <a href="tel:+21671123456" className="bg-black text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm hover:bg-zinc-900 transition-colors inline-flex items-center gap-2">
+              <Headphones className="w-4 h-4" /> +216 71 123 456
+            </a>
+            <Link to="/contact" className="border border-white text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm hover:bg-white hover:text-red-600 transition-colors">
+              Nous écrire
+            </Link>
           </div>
         </div>
       </section>

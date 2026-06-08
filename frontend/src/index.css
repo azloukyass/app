@@ -5,15 +5,15 @@
 @tailwind utilities;
 
 :root {
-    --bn-navy: #0f172a;
-    --bn-navy-2: #1e293b;
-    --bn-steel: #64748b;
-    --bn-steel-2: #94a3b8;
+    --bn-navy: #000000;
+    --bn-navy-2: #0a0a0a;
+    --bn-steel: #525252;
+    --bn-steel-2: #737373;
     --bn-red: #dc2626;
     --bn-red-2: #b91c1c;
-    --bn-bg: #f8fafc;
-    --bn-surface: #ffffff;
-    --bn-border: #e2e8f0;
+    --bn-bg: #000000;
+    --bn-surface: #0a0a0a;
+    --bn-border: #262626;
 }
 
 body {
@@ -21,8 +21,8 @@ body {
     font-family: "IBM Plex Sans", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: var(--bn-bg);
-    color: var(--bn-navy);
+    background: #000000;
+    color: #ffffff;
 }
 
 h1,

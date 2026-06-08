@@ -23,6 +23,7 @@ from vehicles_catalog import get_catalog as get_vehicles_catalog, VEHICLES
 from partsouq_scraper import scrape_vin as partsouq_scrape, scrape_subgroup_parts
 from fadpro_client import search_reference as fadpro_search
 from email_service import send_welcome_email, send_order_confirmation, send_contact_to_admin
+from rapidapi_client import vin_lookup as rapid_vin_lookup, search_oem as rapid_search_oem
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -341,9 +342,26 @@ async def decode_vin(payload: VinIn):
 
     info = None
 
-    # 1. Try AutoDev API first (fast ~1s, returns immediately)
+    # 1. Try RapidAPI TecDoc first (fast & accurate for all brands)
+    try:
+        td = await rapid_vin_lookup(vin)
+        if td and td.get("manu_name"):
+            info = {
+                "make": td.get("manu_name") or "",
+                "model": td.get("model_name") or "",
+                "year": "—",
+                "fuel": "—",
+                "engine": "—",
+                "trim": "—",
+                "tecdoc_model_id": td.get("model_id"),
+                "source": "tecdoc",
+            }
+    except Exception as e:
+        logging.warning(f"RapidAPI TecDoc fail: {e}")
+
+    # 1b. Try AutoDev API as fallback (if no TecDoc match)
     autodev_key = os.environ.get("AUTODEV_API_KEY")
-    if autodev_key:
+    if not info and autodev_key:
         try:
             async with httpx.AsyncClient(timeout=6.0) as cl:
                 r = await cl.get(f"https://auto.dev/api/vin/{vin}?apikey={autodev_key}")
@@ -515,10 +533,50 @@ async def partsouq_subgroup_cached(vin: str, cid: str):
     return cached
 
 
+@api.get("/rapidapi/vin/{vin}")
+async def rapidapi_vin(vin: str):
+    """Resolve VIN via RapidAPI TecDoc — cached by VIN in MongoDB.
+    Returns {vin, manu_id, manu_name, model_id, model_name}."""
+    vin = vin.strip().upper()
+    cached = await db.tecdoc_vehicles.find_one({"vin": vin}, {"_id": 0})
+    if cached:
+        return {**cached, "source": "cache"}
+    info = await rapid_vin_lookup(vin)
+    if not info:
+        raise HTTPException(404, "Aucun véhicule trouvé pour ce VIN dans la base TecDoc")
+    doc = {**info, "cached_at": datetime.now(timezone.utc).isoformat()}
+    await db.tecdoc_vehicles.update_one({"vin": vin}, {"$set": doc}, upsert=True)
+    return {**info, "source": "fresh"}
+
+
+@api.get("/rapidapi/oem-search")
+async def rapidapi_oem_search(model_id: int, q: str, lang_id: int = 6):
+    """Search OEM parts for a given modelId (TecDoc vehicleId).
+    `q` is the free-text search-param (e.g. 'frein', 'pompe à eau', 'filtre').
+    Cached per (model_id, lang_id, q-normalised)."""
+    query = (q or "").strip()
+    if len(query) < 2:
+        raise HTTPException(400, "Recherche trop courte (min. 2 caractères)")
+    key_q = query.lower()
+    cache_key = {"model_id": model_id, "lang_id": lang_id, "q": key_q}
+    cached = await db.tecdoc_oem_cache.find_one(cache_key, {"_id": 0, "cached_at": 0})
+    if cached:
+        return {**cached, "source": "cache"}
+    items = await rapid_search_oem(model_id, query, lang_id)
+    doc = {
+        **cache_key,
+        "count": len(items),
+        "items": items,
+        "cached_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.tecdoc_oem_cache.update_one(cache_key, {"$set": doc}, upsert=True)
+    return {**doc, "source": "fresh"}
+
+
 @api.get("/fadpro/search")
 async def fadpro_search_endpoint(ref: str = "", user: dict = Depends(get_current_user)):
     """Search FadPro by reference origin (refFour). Authenticated users only.
-    Prices are adjusted: prix_origine × 0.19 + 50 DT."""
+    Prices are adjusted: prix_origine × 0.19 + (prix_origine * 0.35)."""
     ref = (ref or "").strip()
     if len(ref) < 2:
         raise HTTPException(400, "Référence trop courte (min. 2 caractères)")
@@ -741,6 +799,8 @@ async def on_startup():
     await db.orders.create_index("id")
     await db.partsouq_cache.create_index("vin", unique=True)
     await db.partsouq_subgroups.create_index([("vin", 1), ("cid", 1)], unique=True)
+    await db.tecdoc_vehicles.create_index("vin", unique=True)
+    await db.tecdoc_oem_cache.create_index([("model_id", 1), ("lang_id", 1), ("q", 1)], unique=True)
     await seed_admin()
 
 
