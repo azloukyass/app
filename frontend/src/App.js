@@ -17,6 +17,7 @@ import PartsList from "@/pages/PartsList";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 import OrderConfirmation from "@/pages/OrderConfirmation";
+import About from "@/pages/About";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Account from "@/pages/Account";
@@ -91,6 +92,7 @@ export default function App() {
                 }
               />
               <Route path="/connexion" element={<Login />} />
+              <Route path="/a-propos" element={<About />} />
               <Route path="/inscription" element={<Register />} />
               <Route
                 path="/compte"

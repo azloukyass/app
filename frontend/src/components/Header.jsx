@@ -59,7 +59,7 @@ export default function Header() {
             <Link to="/a-propos" className="text-white hover:text-red-500 transition-colors hidden sm:inline">À propos de nous</Link>
             <Link to="/contact" className="text-white hover:text-red-500 transition-colors">Contactez-nous</Link>
             <div className="flex items-center gap-3 pl-2 border-l border-white/15">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="Facebook"><Facebook className="w-4 h-4" /></a>
+              <a href="https://www.facebook.com/profile.php?id=61575421658002" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="Facebook" data-testid="header-fb"><Facebook className="w-4 h-4" /></a>
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
               <a href="https://wa.me/21671123456" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="WhatsApp"><WhatsAppIcon className="w-4 h-4" /></a>
             </div>
@@ -95,7 +95,7 @@ export default function Header() {
           </form>
 
           {/* Account & cart */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div className="flex items-center gap-3 sm:gap-6 lg:gap-7 flex-shrink-0">
             {user ? (
               <Link to="/compte" className="hidden sm:inline-flex items-center gap-2 text-white hover:text-red-500 transition-colors" data-testid="header-account">
                 <div className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center">

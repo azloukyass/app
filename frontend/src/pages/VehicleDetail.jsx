@@ -119,7 +119,7 @@ export default function VehicleDetail() {
           <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-sm flex items-center gap-3" data-testid="partsouq-loading">
             <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />
             <div className="text-sm text-amber-900">
-              <strong>Catalogue PartSouq en cours de récupération…</strong> Les références OEM officielles s'afficheront ici dans quelques secondes (~30-60s).
+              <strong>Catalogue Parts en cours de récupération…</strong> Les références OEM officielles s'afficheront ici dans quelques secondes (~30-60s).
             </div>
           </div>
         )}

@@ -157,11 +157,12 @@ function StarRating({ value = 4.5 }) {
   );
 }
 
-function StatCard({ def, value }) {
+function StatCard({ def, value, onClick }) {
   return (
-    <Link
-      to={def.link}
-      className="group relative overflow-hidden bg-white border border-slate-200/70 rounded-md p-5 hover:shadow-lg hover:-translate-y-0.5 hover:border-slate-300 transition-all"
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative overflow-hidden bg-white border border-slate-200/70 rounded-md p-5 hover:shadow-lg hover:-translate-y-0.5 hover:border-slate-300 transition-all text-left w-full"
       data-testid={`stat-${def.key}`}
     >
       <div className={`absolute -top-4 -right-4 w-20 h-20 ${def.bg} rounded-full opacity-60 group-hover:scale-110 transition-transform`} />
@@ -177,7 +178,7 @@ function StatCard({ def, value }) {
           </div>
         </div>
       </div>
-    </Link>
+    </button>
   );
 }
 
@@ -275,7 +276,7 @@ function RecommendedCarousel() {
   );
 }
 
-function DashboardView({ user, orders }) {
+function DashboardView({ user, orders, setView }) {
   const stats = useMemo(() => {
     const total = orders.length;
     const inProgress = orders.filter((o) => ["En attente", "Confirmée", "Expédiée"].includes(o.status)).length;
@@ -332,7 +333,7 @@ function DashboardView({ user, orders }) {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {STAT_DEFS.map((d) => (
-          <StatCard key={d.key} def={d} value={stats[d.key] ?? 0} />
+          <StatCard key={d.key} def={d} value={stats[d.key] ?? 0} onClick={() => setView(d.view)} />
         ))}
       </div>
 
@@ -353,15 +354,15 @@ function DashboardView({ user, orders }) {
         <div className="bg-white border border-slate-100 rounded-md p-6" data-testid="last-order-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-lg font-bold text-slate-900">Ma dernière commande</h3>
-            <Link to="/compte/commandes" className="text-xs font-semibold text-red-600 hover:text-red-700">
-              Voir toutes mes commandes
-            </Link>
+            <button onClick={() => setView("orders")} className="text-xs font-semibold text-red-600 hover:text-red-700" data-testid="see-all-orders">
+              Voir toutes mes commandes →
+            </button>
           </div>
 
           {!lastOrder ? (
             <div className="text-center py-10 text-sm text-slate-500">
               <Package className="w-10 h-10 mx-auto text-slate-200 mb-2" />
-              Aucune commande pour l'instant
+              Aucune commande pour l&apos;instant
             </div>
           ) : (
             <div className="border border-slate-200 rounded-md p-5">
@@ -450,7 +451,7 @@ function DashboardView({ user, orders }) {
             <div className="flex gap-3">
               <Calendar className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="text-xs text-slate-500">Date d'inscription</div>
+                <div className="text-xs text-slate-500">Date d&apos;inscription</div>
                 <div className="font-semibold text-slate-900">
                   {user?.created_at
                     ? new Date(user.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })
@@ -476,7 +477,7 @@ function OrdersView({ orders }) {
       {orders.length === 0 ? (
         <div className="text-center py-16 text-slate-500">
           <Package className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-          Aucune commande pour l'instant
+          Aucune commande pour l&apos;instant
         </div>
       ) : (
         <div className="space-y-3">
@@ -563,7 +564,7 @@ export default function Account() {
       await logout();
       toast.success("Déconnecté");
       navigate("/");
-    } catch {}
+    } catch { /* ignore */ }
   };
 
   const memberSince = user?.created_at
@@ -631,7 +632,7 @@ export default function Account() {
             <div className="bg-slate-800/40 border border-slate-700/50 rounded-md p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Headphones className="w-5 h-5 text-red-400" />
-                <h4 className="font-semibold text-white text-sm">Besoin d'aide ?</h4>
+                <h4 className="font-semibold text-white text-sm">Besoin d&apos;aide ?</h4>
               </div>
               <p className="text-[11px] text-slate-400 mb-2 leading-relaxed">
                 Notre service client est à votre disposition
@@ -669,7 +670,7 @@ export default function Account() {
               </div>
             ) : (
               <>
-                {view === "dashboard" && <DashboardView user={user} orders={orders} />}
+                {view === "dashboard" && <DashboardView user={user} orders={orders} setView={setView} />}
                 {view === "orders" && <OrdersView orders={orders} />}
                 {view === "favorites" && (
                   <PlaceholderView
