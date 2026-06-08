@@ -640,7 +640,7 @@ export default function Account() {
                 href="tel:+21671123456"
                 className="block text-red-400 hover:text-red-300 font-bold text-sm font-mono"
               >
-                +216 71 123 456
+                +216 54 643 643
               </a>
               <div className="text-[10px] text-slate-500 mt-1">
                 Lun - Sam : 08h00 - 18h00

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -11,10 +11,14 @@ import {
   Search,
   Package,
   Sparkles,
+  ShoppingCart,
+  CheckCircle2,
+  Plus,
+  Minus,
+  Tag,
 } from "lucide-react";
-import { api, formatApiError } from "@/lib/api";
+import { api, formatApiError, formatPrice } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
-import FadProSearch from "@/components/FadProSearch";
 
 const SUGGESTIONS = [
   "frein", "pompe", "filtre", "huile", "courroie", "bougie",
@@ -24,7 +28,6 @@ const SUGGESTIONS = [
 
 export default function PartsouqCatalog() {
   const { vin } = useParams();
-  const navigate = useNavigate();
   const { vehicle, setVehicle } = useCart();
   const [tecdoc, setTecdoc] = useState(null);
   const [loadingVin, setLoadingVin] = useState(true);
@@ -39,7 +42,6 @@ export default function PartsouqCatalog() {
     (async () => {
       if (vin.startsWith("MAN-")) {
         toast.error("Le catalogue OEM nécessite un VIN valide.");
-        navigate("/recherche-vin");
         return;
       }
       setLoadingVin(true);
@@ -86,8 +88,8 @@ export default function PartsouqCatalog() {
     setLoadingSearch(true);
     setError("");
     try {
-      const { data } = await api.get(`/rapidapi/oem-search`, {
-        params: { model_id: tecdoc.model_id, q: query, lang_id: 6 },
+      const { data } = await api.get(`/oem-stock-search`, {
+        params: { model_id: tecdoc.model_id, q: query, lang_id: 6, limit: 5 },
       });
       setResults(data);
     } catch (err) {
@@ -107,16 +109,6 @@ export default function PartsouqCatalog() {
     setSearch(s);
     runSearch(s);
   };
-
-  // Group results by product name for cleaner display
-  const grouped = results?.items
-    ? Object.entries(
-        results.items.reduce((acc, it) => {
-          (acc[it.name] = acc[it.name] || []).push(it);
-          return acc;
-        }, {})
-      ).sort((a, b) => b[1].length - a[1].length)
-    : [];
 
   if (loadingVin) {
     return (
@@ -248,137 +240,169 @@ export default function PartsouqCatalog() {
           <div className="text-center py-16">
             <Search className="w-12 h-12 mx-auto text-slate-300 mb-3" />
             <p className="text-slate-500 text-sm">
-              Saisissez le nom d'une pièce pour afficher les références OEM compatibles
+              Saisissez le nom d&apos;une pièce et nous vérifions le stock chez nous
             </p>
           </div>
         )}
 
         {!loadingSearch && results && (
           <>
-            <div className="bg-white border-l-4 border-red-600 pl-4 py-3 pr-4 rounded-sm shadow-sm flex items-center justify-between mb-6" data-testid="oem-summary">
+            <div className="bg-gradient-to-r from-emerald-50 to-white border-l-4 border-emerald-500 pl-4 py-3 pr-4 rounded-sm shadow-sm flex items-center justify-between mb-6" data-testid="oem-summary">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Résultats pour
+                  Articles disponibles pour
                 </div>
-                <div className="font-mono-vin font-semibold text-slate-800 text-sm">"{search}"</div>
+                <div className="font-mono-vin font-semibold text-slate-800 text-sm">&ldquo;{search}&rdquo;</div>
               </div>
               <div className="text-right">
-                <div className="font-display text-2xl font-bold text-red-600">{results.count}</div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500">références OEM</div>
+                <div className="font-display text-2xl font-bold text-emerald-600">{results.count}</div>
+                <div className="text-[10px] uppercase tracking-wider text-slate-500">en stock chez nous</div>
               </div>
             </div>
 
             {results.count === 0 ? (
               <div className="text-center py-16 text-slate-500">
                 <Package className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                <p className="text-sm">Aucune pièce trouvée pour cette recherche.</p>
-                <p className="text-xs mt-2">Essayez un autre terme (ex: frein, pompe, filtre, embrayage…)</p>
+                <p className="text-sm font-semibold text-slate-700">Aucun article disponible pour cette recherche</p>
+                <p className="text-xs mt-2">Nous avons vérifié {results.checked || 0} référence(s) OEM auprès de notre fournisseur local.</p>
+                <p className="text-xs mt-1">Essayez un autre terme (ex: frein, pompe, filtre, embrayage…)</p>
               </div>
             ) : (
-              <div className="space-y-6">
-                {grouped.map(([name, items]) => (
-                  <div
-                    key={name}
-                    className="bg-white border border-slate-200 rounded-sm overflow-hidden"
-                    data-testid={`oem-group-${name.replace(/\s+/g, "-")}`}
-                  >
-                    <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-                      <h3 className="font-display font-bold text-slate-900 text-base">{name}</h3>
-                      <span className="text-xs font-semibold bg-red-100 text-red-700 px-2.5 py-0.5 rounded-sm">
-                        {items.length} référence{items.length > 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                          <tr>
-                            <th className="text-left px-4 py-2.5 font-semibold w-1/3">Référence OEM</th>
-                            <th className="text-left px-4 py-2.5 font-semibold">Désignation</th>
-                            <th className="text-right px-4 py-2.5 font-semibold">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {items.map((it, i) => (
-                            <tr
-                              key={`${it.ref}-${i}`}
-                              className="border-b border-slate-50 hover:bg-amber-50/40 transition-colors"
-                              data-testid={`oem-row-${name.replace(/\s+/g, "-")}-${i}`}
-                            >
-                              <td className="px-4 py-2.5 font-mono-vin font-semibold text-slate-900 whitespace-nowrap">
-                                {it.ref}
-                              </td>
-                              <td className="px-4 py-2.5 text-slate-600 text-xs">{it.name}</td>
-                              <td className="px-4 py-2.5 text-right">
-                                <button
-                                  onClick={() => {
-                                    navigator.clipboard?.writeText(it.ref);
-                                    toast.success(`Référence ${it.ref} copiée. Collez-la dans la recherche FadPro.`);
-                                    // Smooth scroll to FadPro search
-                                    const el = document.querySelector('[data-testid="fadpro-search-input"]');
-                                    if (el) {
-                                      el.scrollIntoView({ behavior: "smooth", block: "center" });
-                                      el.focus();
-                                    }
-                                  }}
-                                  className="text-xs font-semibold bg-slate-900 hover:bg-red-600 text-white px-3 py-1.5 rounded-sm transition-colors"
-                                  data-testid={`oem-find-stock-${it.ref}`}
-                                  title="Copier la référence et vérifier le stock chez FadPro"
-                                >
-                                  Vérifier stock →
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <StockProductGrid items={results.items} />
             )}
           </>
         )}
       </div>
-
-      {/* Hidden FadPro instance that listens to global events */}
-      <FadProAutoOpen />
     </div>
   );
 }
 
 /**
- * Renders FadProSearch in a hidden form, listens for "fadpro-search" event and
- * auto-fills + submits when an OEM "Vérifier stock" button is clicked.
+ * Grid of in-stock product cards from FadPro.
+ * Each card supports quantity selection and "Add to cart".
  */
-function FadProAutoOpen() {
-  const [pendingRef, setPendingRef] = useState("");
+function StockProductGrid({ items }) {
+  const { add: addToCart } = useCart();
+  const [qty, setQty] = useState({});
 
-  useEffect(() => {
-    const handler = (e) => {
-      const ref = e?.detail?.ref;
-      if (!ref) return;
-      setPendingRef(ref);
-    };
-    window.addEventListener("fadpro-search", handler);
-    return () => window.removeEventListener("fadpro-search", handler);
-  }, []);
+  const setQuantity = (ref, value) => {
+    setQty((s) => ({ ...s, [ref]: Math.max(1, value) }));
+  };
 
-  useEffect(() => {
-    if (!pendingRef) return;
-    const input = document.querySelector('[data-testid="fadpro-search-input"]');
-    const btn = document.querySelector('[data-testid="fadpro-search-btn"]');
-    if (input && btn) {
-      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-      setter.call(input, pendingRef);
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      setTimeout(() => btn.click(), 50);
-    }
-    setPendingRef("");
-  }, [pendingRef]);
+  const handleAdd = (item) => {
+    const q = Math.max(1, Math.min(qty[item.reference] || 1, item.stock || 1));
+    addToCart(
+      {
+        ref: item.reference,
+        name: item.designation || item.reference,
+        brand: item.fournisseur || "",
+        image: "",
+        price_tnd: item.prix_tnd,
+        source: "fadpro",
+      },
+      q
+    );
+    toast.success(`${q} × ${item.reference} ajouté au panier`);
+    setQuantity(item.reference, 1);
+  };
 
   return (
-    <div className="fixed -bottom-1 -right-1 opacity-0 pointer-events-none" aria-hidden="true">
-      <FadProSearch inline />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="stock-product-grid">
+      {items.map((it, i) => {
+        const q = qty[it.reference] || 1;
+        return (
+          <div
+            key={`${it.reference}-${i}`}
+            className="group bg-white border border-slate-200 hover:border-red-500 hover:shadow-xl transition-all rounded-sm overflow-hidden flex flex-col"
+            data-testid={`stock-card-${it.reference}`}
+          >
+            {/* Header strip */}
+            <div className="flex items-center justify-between bg-gradient-to-r from-black to-zinc-900 text-white px-4 py-2.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-red-400">
+                <Tag className="w-3 h-3" />
+                <span>OEM</span>
+                <span className="font-mono-vin text-white">{it.oem_ref}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <SourceBadge source={it.source} />
+                <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm">
+                  <CheckCircle2 className="w-3 h-3" /> En stock
+                </span>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 flex-1 flex flex-col">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-red-600 mb-1">
+                {it.fournisseur || "FadPro"}
+              </div>
+              <h3 className="font-display font-black text-slate-900 text-base leading-tight mb-2" data-testid={`stock-name-${it.reference}`}>
+                {it.designation || it.oem_name || "—"}
+              </h3>
+              <div className="text-xs text-slate-500 mb-3">
+                Réf. <span className="font-mono-vin font-semibold text-slate-700">{it.reference}</span>
+              </div>
+              {it.categorie && (
+                <div className="text-[11px] text-slate-400 italic mb-3 line-clamp-2">{it.categorie}</div>
+              )}
+
+              <div className="mt-auto">
+                <div className="flex items-end justify-between mb-3">
+                  <div>
+                    <div className="font-display font-black text-2xl text-red-600 leading-none" data-testid={`stock-price-${it.reference}`}>
+                      {formatPrice(it.prix_tnd)}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider text-slate-400 mt-1">
+                      {it.stock} disponible{it.stock > 1 ? "s" : ""}
+                    </div>
+                  </div>
+                  <div className="inline-flex items-center border border-slate-300 rounded-sm">
+                    <button
+                      onClick={() => setQuantity(it.reference, q - 1)}
+                      className="px-2 py-1.5 hover:bg-slate-50"
+                      data-testid={`stock-qty-minus-${it.reference}`}
+                      aria-label="Diminuer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="px-3 text-sm font-bold w-8 text-center">{q}</span>
+                    <button
+                      onClick={() => setQuantity(it.reference, q + 1)}
+                      className="px-2 py-1.5 hover:bg-slate-50"
+                      data-testid={`stock-qty-plus-${it.reference}`}
+                      aria-label="Augmenter"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleAdd(it)}
+                  className="w-full inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-wider px-4 py-3 rounded-sm transition-colors shadow-lg shadow-red-900/20"
+                  data-testid={`stock-add-cart-${it.reference}`}
+                >
+                  <ShoppingCart className="w-4 h-4" /> Ajouter au panier
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
+  );
+}
+
+function SourceBadge({ source }) {
+  const map = {
+    fadpro: { label: "FadPro", cls: "bg-amber-500/20 text-amber-300" },
+    copia: { label: "Copia", cls: "bg-sky-500/20 text-sky-300" },
+    partspro: { label: "PartsPro", cls: "bg-violet-500/20 text-violet-300" },
+  };
+  const info = map[source] || { label: source || "—", cls: "bg-slate-500/20 text-slate-300" };
+  return (
+    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm ${info.cls}`} title={`Source: ${info.label}`}>
+      {info.label}
+    </span>
   );
 }

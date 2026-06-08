@@ -322,7 +322,7 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <a href="tel:+21671123456" className="bg-black text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm hover:bg-zinc-900 transition-colors inline-flex items-center gap-2">
-              <Headphones className="w-4 h-4" /> +216 71 123 456
+              <Headphones className="w-4 h-4" /> +216 54 643 643
             </a>
             <Link to="/contact" className="border-2 border-white text-white font-bold uppercase text-sm tracking-wider px-6 py-3 rounded-sm hover:bg-white hover:text-red-600 transition-colors">
               Nous écrire

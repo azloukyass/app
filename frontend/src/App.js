@@ -15,6 +15,8 @@ import VehicleDetail from "@/pages/VehicleDetail";
 import PartsCategory from "@/pages/PartsCategory";
 import PartsList from "@/pages/PartsList";
 import Cart from "@/pages/Cart";
+import Checkout from "@/pages/Checkout";
+import OrderConfirmation from "@/pages/OrderConfirmation";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Account from "@/pages/Account";
@@ -28,9 +30,9 @@ import NotFound from "@/pages/NotFound";
 
 function Layout({ children }) {
   return (
-    <div className="App min-h-screen flex flex-col">
+    <div className="App min-h-screen flex flex-col bg-white text-slate-900">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-white text-slate-900">{children}</main>
       <Footer />
     </div>
   );
@@ -72,6 +74,22 @@ export default function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/impressum" element={<Impressum />} />
               <Route path="/panier" element={<Cart />} />
+              <Route
+                path="/commande"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/commande/confirmation/:orderId"
+                element={
+                  <ProtectedRoute>
+                    <OrderConfirmation />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/connexion" element={<Login />} />
               <Route path="/inscription" element={<Register />} />
               <Route

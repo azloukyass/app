@@ -19,7 +19,7 @@ export default function Impressum() {
         </Section>
 
         <Section icon={Phone} title="Contact">
-          <p><strong>Téléphone :</strong> <a href="tel:+21671123456" className="text-red-600 hover:underline">+216 71 123 456</a></p>
+          <p><strong>Téléphone :</strong> <a href="tel:+21671123456" className="text-red-600 hover:underline">+216 54 643 643</a></p>
           <p><strong>Email :</strong> <a href="mailto:contact@bennouri.com" className="text-red-600 hover:underline">contact@bennouri.com</a></p>
           <p><strong>Horaires :</strong> Lundi – Samedi, 8h00 – 20h00</p>
         </Section>

@@ -22,6 +22,7 @@ from catalog_data import CATALOG, get_section, get_category, find_part
 from vehicles_catalog import get_catalog as get_vehicles_catalog, VEHICLES
 from partsouq_scraper import scrape_vin as partsouq_scrape, scrape_subgroup_parts
 from fadpro_client import search_reference as fadpro_search
+from iis_supplier_client import get_copia, get_partspro
 from email_service import send_welcome_email, send_order_confirmation, send_contact_to_admin
 from rapidapi_client import vin_lookup as rapid_vin_lookup, search_oem as rapid_search_oem
 
@@ -92,8 +93,12 @@ class OrderIn(BaseModel):
     vehicle_label: Optional[str] = ""
     customer_name: Optional[str] = ""
     shipping_address: str
+    city: Optional[str] = ""
+    postal_code: Optional[str] = ""
     phone: str
     notes: Optional[str] = ""
+    delivery_method: Optional[str] = "domicile"  # domicile | express | relais
+    payment_method: Optional[str] = "cod"  # cod | card | transfer
 
 
 class OrderStatusIn(BaseModel):
@@ -587,6 +592,127 @@ async def fadpro_search_endpoint(ref: str = "", user: dict = Depends(get_current
     return {"reference": ref, "count": len(items), "items": items}
 
 
+@api.get("/oem-stock-search")
+async def oem_stock_search(
+    model_id: int,
+    q: str,
+    lang_id: int = 6,
+    limit: int = 5,
+    user: dict = Depends(get_current_user),
+):
+    """Combined OEM + FadPro lookup.
+
+    Workflow:
+      1. Fetch OEM refs from TecDoc for the given model & query.
+      2. For each OEM ref, look it up in FadPro.
+      3. Return up to `limit` items that are IN STOCK with a usable price.
+
+    The frontend should call this single endpoint instead of OEM + FadPro
+    separately, so users only see articles that are actually available
+    locally with a price and "Ajouter au panier" action.
+    """
+    import asyncio
+
+    query = (q or "").strip()
+    if len(query) < 2:
+        raise HTTPException(400, "Recherche trop courte (min. 2 caractères)")
+
+    # 1. OEM refs from TecDoc (with cache)
+    key_q = query.lower()
+    cache_key = {"model_id": model_id, "lang_id": lang_id, "q": key_q}
+    cached = await db.tecdoc_oem_cache.find_one(cache_key, {"_id": 0, "cached_at": 0})
+    if cached:
+        oem_items = cached.get("items", [])
+    else:
+        oem_items = await rapid_search_oem(model_id, query, lang_id)
+        await db.tecdoc_oem_cache.update_one(
+            cache_key,
+            {"$set": {
+                **cache_key,
+                "count": len(oem_items),
+                "items": oem_items,
+                "cached_at": datetime.now(timezone.utc).isoformat(),
+            }},
+            upsert=True,
+        )
+
+    if not oem_items:
+        return {"query": query, "model_id": model_id, "checked": 0, "count": 0, "items": []}
+
+    # Deduplicate OEM refs while preserving order and the friendly name
+    seen = set()
+    candidates = []
+    for it in oem_items:
+        ref = (it.get("ref") or "").strip()
+        if not ref or ref in seen:
+            continue
+        seen.add(ref)
+        candidates.append({"ref": ref, "oem_name": it.get("name") or ""})
+        # Hard cap candidates to avoid hammering FadPro
+        if len(candidates) >= 60:
+            break
+
+    # 2. Multi-supplier (FadPro + Copia + PartsPro) lookups with concurrency cap
+    sem = asyncio.Semaphore(5)
+
+    async def lookup(c):
+        async with sem:
+            tasks = [
+                fadpro_search(c["ref"]),
+                get_copia().search_reference(c["ref"]),
+                get_partspro().search_reference(c["ref"]),
+            ]
+            try:
+                fp, co, pp = await asyncio.gather(*tasks, return_exceptions=True)
+            except Exception as e:
+                logging.warning(f"Multi-supplier lookup failed for {c['ref']}: {e}")
+                return []
+            picked = []
+            for batch, source in ((fp, "fadpro"), (co, "copia"), (pp, "partspro")):
+                if isinstance(batch, Exception):
+                    logging.warning(f"{source} lookup error for {c['ref']}: {batch}")
+                    continue
+                if not isinstance(batch, list):
+                    continue
+                for fi in batch:
+                    if fi.get("in_stock") and fi.get("prix_tnd"):
+                        fi = {**fi, "oem_ref": c["ref"], "oem_name": c["oem_name"], "source": fi.get("source", source)}
+                        picked.append(fi)
+                        break  # 1 hit per source per OEM ref is enough
+            return picked
+
+    results = []
+    seen_refs = set()
+    # Process in chunks so we can early-stop once we have enough hits
+    chunk_size = 10
+    checked = 0
+    for i in range(0, len(candidates), chunk_size):
+        chunk = candidates[i:i + chunk_size]
+        checked += len(chunk)
+        chunk_results = await asyncio.gather(*[lookup(c) for c in chunk])
+        for batch in chunk_results:
+            for r in batch:
+                key = (r.get("source", ""), r["reference"])
+                if key in seen_refs:
+                    continue
+                seen_refs.add(key)
+                results.append(r)
+                if len(results) >= limit:
+                    break
+            if len(results) >= limit:
+                break
+        if len(results) >= limit:
+            break
+
+    return {
+        "query": query,
+        "model_id": model_id,
+        "checked": checked,
+        "count": len(results),
+        "items": results[:limit],
+    }
+
+
 class ManualVehicleIn(BaseModel):
     make: str
     model: str
@@ -621,6 +747,30 @@ async def vehicles_manual(payload: ManualVehicleIn):
         "trim": "—",
         "source": "manual",
     }
+
+
+def _delivery_cost(method: Optional[str], subtotal: float) -> float:
+    """Tunisia-localized delivery pricing.
+    - domicile (standard 24-48h): 7 DT, FREE if subtotal >= 100 DT
+    - express (same-day Tunis): 10 DT
+    - relais (pickup point): 5 DT
+    """
+    m = (method or "domicile").lower()
+    if m == "express":
+        return 10.0
+    if m == "relais":
+        return 5.0
+    # domicile
+    return 0.0 if subtotal >= 100 else 7.0
+
+
+def _payment_label(code: Optional[str]) -> str:
+    m = (code or "cod").lower()
+    return {
+        "cod": "Paiement à la livraison",
+        "card": "Paiement par carte",
+        "transfer": "Virement bancaire",
+    }.get(m, "Paiement à la livraison")
 
 
 @api.post("/orders")
@@ -664,19 +814,26 @@ async def create_order(data: OrderIn, background_tasks: BackgroundTasks, user: d
         })
     order = {
         "id": str(uuid.uuid4()),
+        "order_number": f"BC{int(datetime.now(timezone.utc).timestamp()) % 100000}",
         "user_id": user["id"],
         "user_email": user["email"],
         "user_name": user["name"],
         "customer_name": (data.customer_name or user["name"]).strip(),
         "items": items_resolved,
-        "total_tnd": round(total, 3),
+        "subtotal_tnd": round(total, 3),
+        "delivery_method": data.delivery_method or "domicile",
+        "delivery_cost_tnd": _delivery_cost(data.delivery_method, total),
+        "total_tnd": round(total + _delivery_cost(data.delivery_method, total), 3),
         "vehicle_vin": data.vehicle_vin or "",
         "vehicle_label": data.vehicle_label or "",
         "shipping_address": data.shipping_address,
+        "city": data.city or "",
+        "postal_code": data.postal_code or "",
         "phone": data.phone,
         "notes": data.notes or "",
         "status": "En attente",
-        "payment_method": "Paiement à la livraison",
+        "payment_method": _payment_label(data.payment_method),
+        "payment_method_code": data.payment_method or "cod",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.orders.insert_one(order)

@@ -39,7 +39,7 @@ export default function Contact() {
         <div className="lg:col-span-1 space-y-4">
           {[
             { Icon: MapPin, t: "Adresse", v: "Rue de France, 2043 Ben Arous, Tunisie" },
-            { Icon: Phone, t: "Téléphone", v: "+216 71 123 456", href: "tel:+21671123456" },
+            { Icon: Phone, t: "Téléphone", v: "+216 54 643 643", href: "tel:+21671123456" },
             { Icon: Mail, t: "Email", v: "contact@bennouri.com", href: "mailto:contact@bennouri.com" },
             { Icon: Clock, t: "Horaires", v: "Lun – Sam : 8h00 – 20h00" },
           ].map((it, i) => (

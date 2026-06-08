@@ -175,3 +175,28 @@ h6,
 ::-webkit-scrollbar-thumb:hover {
     background: #64748b;
 }
+
+/* ---------------------------------------------------------------
+   GLOBAL READABILITY FIX
+   Body has color:#fff which makes inputs/selects/textarea text
+   invisible on white backgrounds. Force a dark default for form
+   controls unless a page explicitly overrides via Tailwind.
+---------------------------------------------------------------- */
+input,
+textarea,
+select {
+    color: #0f172a; /* slate-900 */
+    caret-color: #dc2626;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #94a3b8; /* slate-400 */
+    opacity: 1;
+}
+
+/* Allow opting-out (e.g. dark themed inputs) by adding .input-dark */
+.input-dark,
+.input-dark::placeholder {
+    color: #ffffff !important;
+}

@@ -30,8 +30,8 @@ export default function Login() {
   return (
     <div className="max-w-md mx-auto px-4 sm:px-6 py-16" data-testid="login-page">
       <div className="text-center mb-8">
-        <h1 className="font-display text-4xl font-bold tracking-tight text-slate-900">Connexion</h1>
-        <p className="mt-2 text-slate-500">Accédez à votre compte BENNOURI</p>
+        <h1 className="font-display text-4xl font-black tracking-tight text-slate-900 uppercase">Connexion</h1>
+        <p className="mt-2 text-sm font-semibold tracking-wide text-slate-500">Accédez à votre compte <span className="text-red-600 font-bold">BENNOURI</span></p>
       </div>
 
       <form onSubmit={submit} className="bg-white border border-slate-200 rounded-sm p-8 shadow-sm">

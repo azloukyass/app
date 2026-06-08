@@ -1,191 +1,179 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Trash2, Plus, Minus, ShoppingCart, Truck } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft, Truck, Shield, ShieldCheck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
-import { api, formatApiError, formatPrice } from "@/lib/api";
-import { toast } from "sonner";
+import { formatPrice } from "@/lib/api";
+
+const FREE_SHIPPING_THRESHOLD = 100; // DT
 
 export default function Cart() {
-  const { items, updateQty, remove, clear, total, vehicle } = useCart();
-  const { user } = useAuth();
+  const { items, updateQty, remove, total } = useCart();
   const navigate = useNavigate();
-  const [name, setName] = useState(user?.name || "");
-  const [address, setAddress] = useState(user?.address || "");
-  const [phone, setPhone] = useState(user?.phone || "");
-  const [notes, setNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const freeShipping = total >= FREE_SHIPPING_THRESHOLD;
 
-  const submitOrder = async (e) => {
-    e.preventDefault();
-    if (!user) {
-      toast.info("Connectez-vous pour valider votre commande");
-      navigate("/connexion", { state: { from: "/panier" } });
-      return;
-    }
-    if (items.length === 0) {
-      toast.error("Votre panier est vide");
-      return;
-    }
-    if (!name.trim() || !address.trim() || !phone.trim()) {
-      toast.error("Nom, adresse et téléphone obligatoires");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await api.post("/orders", {
-        items: items.map((i) => ({ ref: i.ref, quantity: i.quantity })),
-        vehicle_vin: vehicle?.vin || "",
-        vehicle_label: vehicle ? `${vehicle.make} ${vehicle.model}` : "",
-        customer_name: name,
-        shipping_address: address,
-        phone,
-        notes,
-      });
-      toast.success("Commande passée avec succès !");
-      clear();
-      navigate("/compte");
-    } catch (err) {
-      toast.error(formatApiError(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-testid="cart-page">
-      <h1 className="font-display text-4xl font-bold text-slate-900 tracking-tight mb-2">Mon panier</h1>
-      <p className="text-slate-500 mb-8">{items.length} article(s) dans votre panier</p>
-
-      {items.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-sm p-16 text-center" data-testid="cart-empty">
+  if (items.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16" data-testid="cart-empty-page">
+        <div className="bg-white border border-slate-200 rounded-sm p-16 text-center">
           <ShoppingCart className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h2 className="font-display text-xl font-semibold text-slate-700">Votre panier est vide</h2>
+          <h2 className="font-display text-2xl font-bold text-slate-900">Votre panier est vide</h2>
           <p className="text-slate-500 mt-2">Trouvez vos pièces grâce au numéro VIN.</p>
           <Link to="/recherche-vin" className="bn-btn-primary inline-flex mt-6" data-testid="cart-go-vin">
             Rechercher par VIN
           </Link>
         </div>
-      ) : (
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-3">
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" data-testid="cart-page">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-display text-3xl sm:text-4xl font-black text-slate-900 tracking-tight uppercase">
+          Votre panier <span className="text-slate-400 font-bold">({items.length})</span>
+        </h1>
+        <Link to="/" className="hidden sm:inline-flex items-center gap-1 text-sm text-slate-600 hover:text-red-600 font-semibold">
+          <ArrowLeft className="w-4 h-4" /> Continuer mes achats
+        </Link>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Items table */}
+        <div className="lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-sm overflow-hidden">
+            <div className="hidden md:grid grid-cols-[1fr_140px_140px_120px_40px] gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+              <span>Produit</span>
+              <span className="text-center">Prix unitaire</span>
+              <span className="text-center">Quantité</span>
+              <span className="text-right">Total</span>
+              <span></span>
+            </div>
             {items.map((p) => (
-              <div key={p.ref} className="bg-white border border-slate-200 rounded-sm p-4 flex gap-4" data-testid={`cart-item-${p.ref}`}>
-                <img src={p.image} alt={p.name} className="w-24 h-24 object-cover flex-shrink-0 bg-slate-100 rounded-sm" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-mono-vin uppercase text-slate-400 tracking-widest">{p.ref} · {p.brand}</div>
-                  <h3 className="font-display font-semibold text-slate-900">{p.name}</h3>
-                  <div className="mt-2 flex items-center gap-2">
-                    <button onClick={() => updateQty(p.ref, p.quantity - 1)} className="p-1 border border-slate-300 hover:bg-slate-100 rounded-sm" data-testid={`qty-minus-${p.ref}`}>
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="text-sm font-mono-vin font-semibold w-8 text-center">{p.quantity}</span>
-                    <button onClick={() => updateQty(p.ref, p.quantity + 1)} className="p-1 border border-slate-300 hover:bg-slate-100 rounded-sm" data-testid={`qty-plus-${p.ref}`}>
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
+              <div
+                key={p.ref}
+                className="grid grid-cols-[1fr_40px] md:grid-cols-[1fr_140px_140px_120px_40px] gap-4 px-5 py-4 border-b border-slate-100 items-center"
+                data-testid={`cart-item-${p.ref}`}
+              >
+                {/* Product */}
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-sm flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <ShoppingCart className="w-6 h-6 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-display font-bold text-slate-900 text-sm sm:text-base leading-tight" data-testid={`cart-name-${p.ref}`}>{p.name}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{p.brand || ""} · <span className="font-mono-vin">{p.ref}</span></div>
+                    {/* Mobile: price + qty inline */}
+                    <div className="md:hidden mt-2 flex items-center justify-between">
+                      <span className="text-sm font-bold text-slate-900">{formatPrice(p.price_tnd)}</span>
+                      <div className="inline-flex items-center border border-slate-300 rounded-sm">
+                        <button onClick={() => updateQty(p.ref, p.quantity - 1)} className="px-2 py-1 hover:bg-slate-50"><Minus className="w-3.5 h-3.5" /></button>
+                        <span className="px-3 text-sm font-bold w-8 text-center">{p.quantity}</span>
+                        <button onClick={() => updateQty(p.ref, p.quantity + 1)} className="px-2 py-1 hover:bg-slate-50"><Plus className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right flex flex-col justify-between">
-                  <div className="font-display font-bold text-slate-900">{formatPrice(p.price_tnd * p.quantity)}</div>
-                  <button onClick={() => remove(p.ref)} className="text-slate-400 hover:text-red-600 self-end" data-testid={`cart-remove-${p.ref}`}>
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                {/* Desktop columns */}
+                <div className="hidden md:block text-center text-sm font-semibold text-slate-700" data-testid={`cart-unit-${p.ref}`}>
+                  {formatPrice(p.price_tnd)}
                 </div>
+                <div className="hidden md:flex items-center justify-center">
+                  <div className="inline-flex items-center border border-slate-300 rounded-sm">
+                    <button onClick={() => updateQty(p.ref, p.quantity - 1)} className="px-2 py-1.5 hover:bg-slate-50" data-testid={`qty-minus-${p.ref}`}><Minus className="w-3.5 h-3.5" /></button>
+                    <span className="px-3 text-sm font-bold w-8 text-center">{p.quantity}</span>
+                    <button onClick={() => updateQty(p.ref, p.quantity + 1)} className="px-2 py-1.5 hover:bg-slate-50" data-testid={`qty-plus-${p.ref}`}><Plus className="w-3.5 h-3.5" /></button>
+                  </div>
+                </div>
+                <div className="hidden md:block text-right font-display font-black text-slate-900" data-testid={`cart-line-total-${p.ref}`}>
+                  {formatPrice(p.price_tnd * p.quantity)}
+                </div>
+                <button onClick={() => remove(p.ref)} className="text-slate-400 hover:text-red-600 justify-self-end" aria-label="Supprimer" data-testid={`cart-remove-${p.ref}`}>
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             ))}
-            <button onClick={clear} className="text-xs text-slate-500 hover:text-red-600 underline" data-testid="cart-clear">Vider le panier</button>
           </div>
 
-          <form onSubmit={submitOrder} className="bg-white border border-slate-200 rounded-sm p-6 h-fit sticky top-24" data-testid="cart-summary">
-            <h2 className="font-display font-bold text-xl text-slate-900 mb-4">Résumé</h2>
-
-            {vehicle && (
-              <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-sm text-xs">
-                <div className="text-slate-500 uppercase tracking-wider mb-1">Véhicule</div>
-                <div className="font-display font-semibold text-slate-900">{vehicle.make} {vehicle.model}</div>
-                <div className="font-mono-vin text-slate-500">{vehicle.vin}</div>
-              </div>
-            )}
-
-            <div className="space-y-2 text-sm border-t border-slate-200 pt-4">
-              <div className="flex justify-between text-slate-600">
-                <span>Sous-total</span>
-                <span>{formatPrice(total)}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Livraison</span>
-                <span className="text-emerald-600 font-medium">Offerte</span>
-              </div>
-              <div className="flex justify-between text-lg font-display font-bold pt-3 border-t border-slate-200 text-slate-900">
-                <span>Total</span>
-                <span data-testid="cart-total">{formatPrice(total)}</span>
-              </div>
+          {/* Promo code */}
+          <div className="mt-5 bg-white border border-slate-200 rounded-sm p-5">
+            <div className="text-sm font-semibold text-slate-700 mb-2">Vous avez un code promo ?</div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Entrez votre code"
+                className="flex-1 px-3 py-2.5 text-sm text-slate-900 border border-slate-300 rounded-sm focus:outline-none focus:border-red-500"
+                data-testid="promo-input"
+              />
+              <button className="bg-slate-900 hover:bg-black text-white font-bold uppercase text-xs tracking-wider px-5 py-2.5 rounded-sm" data-testid="promo-apply">
+                Appliquer
+              </button>
             </div>
-
-            <div className="mt-6 space-y-3">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Nom complet</label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-sm focus:border-red-600 outline-none text-sm"
-                  placeholder="Votre nom et prénom"
-                  data-testid="cart-name-input"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Téléphone</label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-sm focus:border-red-600 outline-none text-sm"
-                  placeholder="+216 ..."
-                  data-testid="cart-phone-input"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Adresse de livraison</label>
-                <textarea
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-sm focus:border-red-600 outline-none text-sm"
-                  placeholder="Adresse complète"
-                  data-testid="cart-address-input"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Notes (optionnel)</label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-sm focus:border-red-600 outline-none text-sm"
-                  placeholder="Informations complémentaires"
-                  data-testid="cart-notes-input"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-sm flex items-start gap-2 text-xs text-amber-900">
-              <Truck className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <div><strong>Paiement à la livraison</strong> · Vous réglez en espèces ou par carte à la réception.</div>
-            </div>
-
-            <button type="submit" disabled={submitting} className="mt-5 w-full bn-btn-primary disabled:opacity-60" data-testid="cart-checkout-button">
-              {submitting ? "Validation..." : "Valider la commande"}
-            </button>
-            {!user && (
-              <p className="mt-3 text-xs text-slate-500 text-center">
-                <Link to="/connexion" className="text-red-600 hover:underline">Connectez-vous</Link> pour finaliser
-              </p>
-            )}
-          </form>
+          </div>
         </div>
-      )}
+
+        {/* Summary card */}
+        <aside className="lg:col-span-1">
+          <div className="bg-white border border-slate-200 rounded-sm p-6 sticky top-24" data-testid="cart-summary">
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 uppercase text-xs font-bold tracking-wider">Sous-total</span>
+                <span className="font-display font-black text-slate-900" data-testid="cart-subtotal">{formatPrice(total)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 uppercase text-xs font-bold tracking-wider">Livraison</span>
+                <span className={`font-semibold ${freeShipping ? "text-emerald-600" : "text-slate-700"}`} data-testid="cart-shipping-label">
+                  {freeShipping ? "Gratuite" : "à partir de 7 DT"}
+                </span>
+              </div>
+              {!freeShipping && (
+                <div className="text-[11px] text-slate-500 italic">
+                  Livraison gratuite à partir de <span className="font-bold text-red-600">{FREE_SHIPPING_THRESHOLD} DT</span>
+                  <div className="mt-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-red-500" style={{ width: `${Math.min(100, (total / FREE_SHIPPING_THRESHOLD) * 100)}%` }} />
+                  </div>
+                </div>
+              )}
+              <div className="border-t border-slate-200 pt-3 flex items-center justify-between">
+                <span className="font-display font-black text-slate-900 uppercase">Total</span>
+                <span className="font-display font-black text-2xl text-red-600" data-testid="cart-total">{formatPrice(total)}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate("/commande")}
+              className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase text-sm tracking-wider px-6 py-3.5 rounded-sm transition-colors shadow-lg shadow-red-900/30"
+              data-testid="cart-checkout-btn"
+            >
+              Passer la commande →
+            </button>
+            <Link to="/" className="mt-3 block text-center text-xs text-slate-500 hover:text-red-600 font-semibold">
+              ← Continuer mes achats
+            </Link>
+          </div>
+        </aside>
+      </div>
+
+      {/* Trust strip */}
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-200 pt-8">
+        {[
+          { Icon: Truck, title: "Livraison rapide", sub: "Partout en Tunisie" },
+          { Icon: Shield, title: "Paiement à la livraison", sub: "Payez à réception" },
+          { Icon: ShieldCheck, title: "Produits originaux", sub: "Qualité garantie" },
+        ].map((b) => (
+          <div key={b.title} className="flex items-center gap-3">
+            <div className="w-10 h-10 border-2 border-red-600 text-red-600 flex items-center justify-center rounded-sm">
+              <b.Icon className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-display font-black text-slate-900 uppercase text-sm">{b.title}</div>
+              <div className="text-xs text-slate-500">{b.sub}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
