@@ -23,47 +23,8 @@ const WhatsAppIcon = ({ className = "" }) => (
   </svg>
 );
 
-// New logo: stylized car silhouette with red BENOURI PIASUTO text
-const BenouriLogo = ({ className = "" }) => (
-  <svg viewBox="0 0 320 110" className={className} xmlns="http://www.w3.org/2000/svg">
-    {/* Car silhouette (red) */}
-    <g transform="translate(0,0)">
-      <path d="M8 38 Q 18 22 35 18 L 75 18 Q 90 18 100 30 L 120 38 L 138 38 L 145 28 L 152 38 L 138 38" stroke="#DC2626" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 38 L 152 38" stroke="#DC2626" strokeWidth="3.5" strokeLinecap="round" />
-      <circle cx="35" cy="38" r="8" fill="#0F0F0F" stroke="#DC2626" strokeWidth="3" />
-      <circle cx="35" cy="38" r="3" fill="#DC2626" />
-      <circle cx="105" cy="38" r="8" fill="#0F0F0F" stroke="#DC2626" strokeWidth="3" />
-      <circle cx="105" cy="38" r="3" fill="#DC2626" />
-      {/* Speed lines */}
-      <line x1="115" y1="22" x2="135" y2="22" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="118" y1="28" x2="138" y2="28" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" />
-    </g>
-    {/* Text BENOURI */}
-    <text x="6" y="78" fill="#ffffff" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="32" letterSpacing="-1">BENOURI</text>
-    {/* Red gear */}
-    <g transform="translate(170,55)">
-      <circle r="14" fill="#DC2626" />
-      <circle r="6" fill="#0F0F0F" />
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => (
-        <rect
-          key={i}
-          x="-2"
-          y="-18"
-          width="4"
-          height="6"
-          fill="#DC2626"
-          transform={`rotate(${deg})`}
-        />
-      ))}
-    </g>
-    {/* Text PIASUTO */}
-    <text x="190" y="78" fill="#DC2626" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="32" letterSpacing="-1">PIASUTO</text>
-    {/* Subline */}
-    <line x1="6" y1="92" x2="40" y2="92" stroke="#DC2626" strokeWidth="2" />
-    <text x="48" y="98" fill="#ffffff" fontFamily="'Outfit', sans-serif" fontWeight="600" fontSize="11" letterSpacing="5">PIÈCES AUTO ORIGINALES</text>
-    <line x1="266" y1="92" x2="300" y2="92" stroke="#DC2626" strokeWidth="2" />
-  </svg>
-);
+// Real logo image (uploaded by user)
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_mechanic-hub-200/artifacts/4302mpoq_logo-bennouri.jpg";
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -111,7 +72,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-6">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0" data-testid="logo-link">
-            <BenouriLogo className="h-14 sm:h-16 w-auto" />
+            <img src={LOGO_URL} alt="BENOURI PIASUTO" className="h-14 sm:h-16 w-auto object-contain" />
           </Link>
 
           {/* Search bar with categories */}

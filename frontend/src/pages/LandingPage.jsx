@@ -178,18 +178,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trust badges row — WHITE bg */}
+      {/* Trust badges row — WHITE bg, outlined red badges */}
       <section className="bg-white text-black" data-testid="trust-badges">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-6">
             {TRUST_BADGES.map((b) => (
-              <div key={b.title} className="group flex items-center gap-4 p-5 bg-zinc-50 border border-zinc-200 hover:border-red-600 hover:bg-white hover:shadow-lg transition-all rounded-sm">
-                <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-md shadow-red-600/30">
-                  <b.Icon className="w-6 h-6 text-white" strokeWidth={2} />
+              <div key={b.title} className="group flex items-center gap-4">
+                {/* Pointed diamond/marker badge */}
+                <div className="relative flex-shrink-0">
+                  <svg viewBox="0 0 64 80" className="w-14 h-16 sm:w-16 sm:h-20 transition-transform duration-300 group-hover:scale-110">
+                    {/* Diamond/pointer outline */}
+                    <path
+                      d="M32 4 C 44 4, 56 18, 56 38 C 56 56, 44 74, 32 76 C 20 74, 8 56, 8 38 C 8 18, 20 4, 32 4 Z"
+                      fill="none"
+                      stroke="#DC2626"
+                      strokeWidth="2.5"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center pb-2">
+                    <b.Icon className="w-6 h-6 text-red-600" strokeWidth={2} />
+                  </div>
                 </div>
                 <div>
-                  <div className="font-display font-black text-black uppercase text-sm tracking-wide">{b.title}</div>
-                  <div className="text-xs text-zinc-600 mt-0.5">{b.sub}</div>
+                  <div className="font-display font-black text-black uppercase text-base tracking-wide leading-tight">{b.title}</div>
+                  <div className="text-sm text-zinc-500 mt-1">{b.sub}</div>
                 </div>
               </div>
             ))}
