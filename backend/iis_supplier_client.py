@@ -20,7 +20,7 @@ This client maintains an aiohttp session per supplier instance and lazily
 re-authenticates when the session expires.
 
 Price logic (consistent with FadPro):
-    final_tnd = unit_price_ht * 1.19 + 50
+    final_tnd = prix_origine + 19% + 35% = prix_origine * 1.54
 """
 
 from __future__ import annotations
@@ -188,8 +188,8 @@ class IISSupplierClient:
                 stock_main = int(_to_float_eu(it.get("StockMagasin")))
                 stock_other = int(_to_float_eu(it.get("StockAutresMagasin")))
                 stock_total = stock_main + stock_other
-                # Pricing: HT × 1.19 + 50 DT (same formula as FadPro)
-                prix_tnd = round(unit_ht * 1.19 + 50, 3)
+                # Pricing: prix + 19% + 35% = prix * 1.54 (unified across all suppliers)
+                prix_tnd = round(unit_ht * 1.54, 3)
 
                 item_no = (it.get("ItemNo") or "").strip()
                 description = (it.get("Description") or "").strip()
