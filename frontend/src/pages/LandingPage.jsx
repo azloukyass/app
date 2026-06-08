@@ -159,9 +159,17 @@ export default function LandingPage() {
               </div>
               <div className="mt-2 flex items-center justify-between text-[11px]">
                 <span className="text-white/60">17 caractères en général · <span className="text-red-400 font-semibold">{vin.length}/17</span></span>
-                <Link to="/recherche-vin" className="text-red-400 hover:text-red-300 font-semibold uppercase tracking-wider">
+                <a
+                  href="#brands-section"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById("brands-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className="text-red-400 hover:text-red-300 font-semibold uppercase tracking-wider"
+                  data-testid="hero-brand-link"
+                >
                   Recherche par marque →
-                </Link>
+                </a>
               </div>
             </form>
 
@@ -269,7 +277,7 @@ export default function LandingPage() {
       </section>
 
       {/* Constructeurs / Brands — WHITE bg */}
-      <section className="bg-zinc-50 text-black border-y border-zinc-200" data-testid="brands-section">
+      <section id="brands-section" className="bg-zinc-50 text-black border-y border-zinc-200" data-testid="brands-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-3">
             <div>
@@ -280,9 +288,6 @@ export default function LandingPage() {
               <p className="text-zinc-600 mt-2 text-sm">
                 {BRANDS.length} marques · plus de {BRANDS.reduce((s, b) => s + b.models.length, 0)} modèles couverts
               </p>
-            </div>
-            <div className="text-xs text-zinc-500 italic">
-              Survolez un logo pour voir la couleur de la marque
             </div>
           </div>
 
