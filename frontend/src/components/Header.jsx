@@ -61,7 +61,7 @@ export default function Header() {
             <div className="flex items-center gap-3 pl-2 border-l border-white/15">
               <a href="https://www.facebook.com/profile.php?id=61575421658002" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="Facebook" data-testid="header-fb"><Facebook className="w-4 h-4" /></a>
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="Instagram"><Instagram className="w-4 h-4" /></a>
-              <a href="https://wa.me/21671123456" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="WhatsApp"><WhatsAppIcon className="w-4 h-4" /></a>
+              <a href="https://wa.me/21650881000" target="_blank" rel="noopener noreferrer" className="text-white hover:text-red-500" aria-label="WhatsApp" data-testid="header-wa"><WhatsAppIcon className="w-4 h-4" /></a>
             </div>
           </div>
         </div>

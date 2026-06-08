@@ -160,9 +160,9 @@ export default function About() {
                 Ben Arous 2013, Tunisie
               </InfoLine>
               <InfoLine Icon={Phone} label="Téléphone">
-                <a href="tel:+21671123456" className="hover:text-red-600">+216 71 123 456</a>
+                <a href="tel:+21650881000" className="hover:text-red-600">+216 50 881 000</a>
                 <span className="mx-2 text-slate-300">·</span>
-                <a href="https://wa.me/21671123456" className="hover:text-red-600">WhatsApp</a>
+                <a href="https://wa.me/21650881000" target="_blank" rel="noopener noreferrer" className="hover:text-red-600">WhatsApp</a>
               </InfoLine>
               <InfoLine Icon={Mail} label="Email">
                 <a href="mailto:contact@benouri.tn" className="hover:text-red-600">contact@benouri.tn</a>
