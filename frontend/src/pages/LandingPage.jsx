@@ -178,29 +178,51 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trust badges row — WHITE bg, outlined red badges */}
+      {/* Trust badges row — WHITE bg, polished marker badges */}
       <section className="bg-white text-black" data-testid="trust-badges">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-6">
-            {TRUST_BADGES.map((b) => (
-              <div key={b.title} className="group flex items-center gap-4">
-                {/* Pointed diamond/marker badge */}
-                <div className="relative flex-shrink-0">
-                  <svg viewBox="0 0 64 80" className="w-14 h-16 sm:w-16 sm:h-20 transition-transform duration-300 group-hover:scale-110">
-                    {/* Diamond/pointer outline */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
+            {TRUST_BADGES.map((b, idx) => (
+              <div key={b.title} className="group flex items-center gap-5">
+                {/* Polished marker / leaf badge */}
+                <div className="relative flex-shrink-0 transition-transform duration-300 group-hover:-translate-y-1">
+                  <svg viewBox="0 0 72 88" className="w-16 h-20 sm:w-[72px] sm:h-[88px] drop-shadow-[0_6px_12px_rgba(220,38,38,0.18)]">
+                    <defs>
+                      <linearGradient id={`badge-fill-${idx}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#fff5f5" />
+                        <stop offset="100%" stopColor="#ffe4e6" />
+                      </linearGradient>
+                      <linearGradient id={`badge-stroke-${idx}`} x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#ef4444" />
+                        <stop offset="100%" stopColor="#b91c1c" />
+                      </linearGradient>
+                    </defs>
+                    {/* Leaf / marker silhouette with subtle gradient fill */}
                     <path
-                      d="M32 4 C 44 4, 56 18, 56 38 C 56 56, 44 74, 32 76 C 20 74, 8 56, 8 38 C 8 18, 20 4, 32 4 Z"
-                      fill="none"
-                      stroke="#DC2626"
+                      d="M36 4 C 50 4, 64 20, 64 42 C 64 62, 50 80, 36 84 C 22 80, 8 62, 8 42 C 8 20, 22 4, 36 4 Z"
+                      fill={`url(#badge-fill-${idx})`}
+                      stroke={`url(#badge-stroke-${idx})`}
                       strokeWidth="2.5"
                     />
+                    {/* Inner highlight ring */}
+                    <path
+                      d="M36 12 C 47 12, 58 25, 58 42 C 58 58, 47 74, 36 77 C 25 74, 14 58, 14 42 C 14 25, 25 12, 36 12 Z"
+                      fill="none"
+                      stroke="#fecaca"
+                      strokeWidth="0.8"
+                    />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center pb-2">
-                    <b.Icon className="w-6 h-6 text-red-600" strokeWidth={2} />
+                  {/* Icon centered above the curved part */}
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: 8 }}>
+                    <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center shadow-md shadow-red-700/30 transition-transform duration-300 group-hover:scale-110">
+                      <b.Icon className="w-4 h-4 text-white" strokeWidth={2.5} />
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <div className="font-display font-black text-black uppercase text-base tracking-wide leading-tight">{b.title}</div>
+                  <div className="font-display font-black text-black uppercase text-base sm:text-lg tracking-wide leading-tight">
+                    {b.title}
+                  </div>
                   <div className="text-sm text-zinc-500 mt-1">{b.sub}</div>
                 </div>
               </div>
