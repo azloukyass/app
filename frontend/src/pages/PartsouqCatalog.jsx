@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -28,10 +28,12 @@ const SUGGESTIONS = [
 
 export default function PartsouqCatalog() {
   const { vin } = useParams();
+  const [searchParams] = useSearchParams();
+  const initialQuery = (searchParams.get("q") || "").trim();
   const { vehicle, setVehicle } = useCart();
   const [tecdoc, setTecdoc] = useState(null);
   const [loadingVin, setLoadingVin] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialQuery);
   const [results, setResults] = useState(null);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [error, setError] = useState("");
@@ -74,6 +76,13 @@ export default function PartsouqCatalog() {
     })();
     return () => { cancelled = true; };
   }, [vin]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-run search if a query was passed via URL (?q=...)
+  useEffect(() => {
+    if (tecdoc?.model_id && initialQuery && initialQuery.length >= 2 && !results && !loadingSearch) {
+      runSearch(initialQuery);
+    }
+  }, [tecdoc, initialQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const runSearch = async (q) => {
     const query = (q || search).trim();

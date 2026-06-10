@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ArrowRight, Loader2, Layers, Package } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowRight, Loader2, Layers, Package, Hash, Search } from "lucide-react";
 import { api, formatApiError } from "@/lib/api";
 import { toast } from "sonner";
+import { useCart } from "@/context/CartContext";
 
 const SECTION_META = {
   mecanique: { label: "Mécanique", bar: "from-red-700 to-red-500", color: "text-red-600" },
@@ -14,6 +15,7 @@ export default function CategoryTree() {
   const { section } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { vehicle } = useCart();
 
   // Extract everything after /catalogue/:section/  → the slug path
   const pathPrefix = `/catalogue/${section}/`;
@@ -126,29 +128,107 @@ export default function CategoryTree() {
             })}
           </div>
         ) : isLeaf ? (
-          <div className="bg-white border border-slate-200 rounded-sm p-12 text-center" data-testid="tree-leaf-placeholder">
-            <div className="w-16 h-16 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-4">
-              <Package className="w-8 h-8 text-red-600" />
-            </div>
-            <h2 className="font-display text-2xl font-black uppercase text-slate-900 tracking-tight">
-              {data.label}
-            </h2>
-            <p className="mt-3 text-sm text-slate-500 max-w-md mx-auto">
-              Les pièces disponibles pour cette catégorie seront affichées ici très prochainement.
-            </p>
-            <p className="mt-2 text-xs text-slate-400">
-              Vous pouvez déjà rechercher cette pièce par numéro VIN ou OEM.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link to="/recherche-vin" className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-sm tracking-wider px-5 py-2.5 rounded-sm">
-                Rechercher par VIN <ArrowRight className="w-4 h-4" />
-              </Link>
-              <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-500 text-slate-700 font-bold uppercase text-sm tracking-wider px-5 py-2.5 rounded-sm">
-                <ChevronLeft className="w-4 h-4" /> Retour
-              </button>
-            </div>
-          </div>
+          <LeafPanel label={data.label} vehicle={vehicle} navigate={navigate} />
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function LeafPanel({ label, vehicle, navigate }) {
+  const [vinInput, setVinInput] = useState("");
+  const queryEncoded = encodeURIComponent(label);
+
+  // Auto-redirect to OEM catalog if a vehicle is already selected
+  useEffect(() => {
+    if (vehicle?.vin) {
+      navigate(`/vehicule/${vehicle.vin}/catalogue-oem?q=${queryEncoded}`, { replace: true });
+    }
+  }, [vehicle, queryEncoded, navigate]);
+
+  if (vehicle?.vin) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-sm p-12 text-center" data-testid="tree-leaf-redirecting">
+        <Loader2 className="w-8 h-8 text-red-600 mx-auto mb-3 animate-spin" />
+        <p className="text-sm text-slate-500">Recherche &ldquo;{label}&rdquo; pour {vehicle.make} {vehicle.model}…</p>
+      </div>
+    );
+  }
+
+  const submitVin = (e) => {
+    e.preventDefault();
+    const v = (vinInput || "").trim().toUpperCase();
+    if (v.length !== 17) {
+      toast.error("Le VIN doit contenir 17 caractères.");
+      return;
+    }
+    navigate(`/vehicule/${v}/catalogue-oem?q=${queryEncoded}`);
+  };
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-sm overflow-hidden" data-testid="tree-leaf-placeholder">
+      {/* Hero header */}
+      <div className="bg-gradient-to-r from-black via-zinc-900 to-red-900 px-8 py-8 relative overflow-hidden">
+        <div className="absolute -right-20 top-1/2 -translate-y-1/2 w-72 h-72 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative max-w-2xl">
+          <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-400 mb-2">Recherche par VIN</div>
+          <h2 className="font-display text-2xl sm:text-3xl font-black uppercase text-white tracking-tight leading-tight">
+            Trouvez votre <span className="text-red-500">{label}</span>
+          </h2>
+          <p className="text-slate-300 text-sm mt-3 max-w-lg">
+            Saisissez votre numéro VIN ci-dessous — nous interrogeons en direct nos partenaires
+            (<span className="text-amber-300">FadPro</span>, <span className="text-sky-300">Copia</span>, <span className="text-violet-300">PartsPro</span>)
+            et n&apos;affichons que les références disponibles en stock pour votre véhicule.
+          </p>
+        </div>
+      </div>
+
+      {/* VIN form */}
+      <div className="p-8">
+        <form onSubmit={submitVin} className="max-w-2xl" data-testid="leaf-vin-form">
+          <label className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-2 block">
+            Numéro VIN (17 caractères)
+          </label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={vinInput}
+                onChange={(e) => setVinInput(e.target.value.toUpperCase())}
+                maxLength={17}
+                placeholder="VF15R0K0H48649991"
+                className="w-full pl-9 pr-3 py-3 text-sm font-mono-vin tracking-wider text-slate-900 border border-slate-300 rounded-sm focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                data-testid="leaf-vin-input"
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-sm tracking-wider px-6 py-3 rounded-sm transition-colors shadow-lg shadow-red-900/30"
+              data-testid="leaf-vin-submit"
+            >
+              <Search className="w-4 h-4" /> Rechercher
+            </button>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-500">
+            {vinInput.length}/17 caractères · Le VIN se trouve sur la carte grise (champ E) ou sur le pare-brise côté conducteur.
+          </div>
+        </form>
+
+        <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-xs text-slate-500">
+            Vous n&apos;avez pas le VIN ? Recherchez par marque et modèle.
+          </p>
+          <div className="flex gap-3">
+            <Link to="/recherche-vin" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-600 hover:text-red-700">
+              Recherche par marque →
+            </Link>
+            <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900">
+              <ChevronLeft className="w-3.5 h-3.5" /> Retour
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
