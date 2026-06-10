@@ -13,6 +13,7 @@ import LandingPage from "@/pages/LandingPage";
 import VinSearch from "@/pages/VinSearch";
 import VehicleDetail from "@/pages/VehicleDetail";
 import PartsCategory from "@/pages/PartsCategory";
+import CategoryTree from "@/pages/CategoryTree";
 import PartsList from "@/pages/PartsList";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
@@ -71,7 +72,7 @@ export default function App() {
               <Route path="/vehicule/:vin/catalogue-oem" element={<PartsouqCatalog />} />
               <Route path="/marque/:brand" element={<BrandModels />} />
               <Route path="/catalogue/:section" element={<PartsCategory />} />
-              <Route path="/catalogue/:section/:category" element={<PartsList />} />
+              <Route path="/catalogue/:section/*" element={<CategoryTree />} />
               <Route path="/recherche" element={<SearchResults />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/impressum" element={<Impressum />} />

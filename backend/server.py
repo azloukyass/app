@@ -244,11 +244,50 @@ async def get_section_api(section: str):
                 "label": c["label"],
                 "icon": c["icon"],
                 "image": c["image"],
-                "sub_items": c.get("sub_items", []),
-                "count": len(c["parts"]),
+                "children": c.get("children", []),
+                "sub_items": [child["label"] for child in c.get("children", [])],
+                "count": len(c.get("parts", [])),
             }
             for c in data["categories"]
         ],
+    }
+
+
+@api.get("/catalog-tree/{section}/{path:path}")
+async def get_catalog_node(section: str, path: str):
+    """Walk the catalog tree by slug path (slash-separated).
+    Returns the node {slug, label, children, parts, breadcrumb} at the given path.
+    """
+    sec = get_section(section)
+    if not sec:
+        raise HTTPException(404, "Section introuvable")
+    slugs = [s for s in (path or "").split("/") if s]
+    if not slugs:
+        raise HTTPException(400, "Chemin de catégorie manquant")
+
+    # 1st level — categories
+    node = next((c for c in sec["categories"] if c["slug"] == slugs[0]), None)
+    if not node:
+        raise HTTPException(404, "Catégorie introuvable")
+    breadcrumb = [{"slug": node["slug"], "label": node["label"]}]
+
+    # Descend into children
+    for slug in slugs[1:]:
+        children = node.get("children", [])
+        next_node = next((ch for ch in children if ch["slug"] == slug), None)
+        if not next_node:
+            raise HTTPException(404, f"Sous-catégorie '{slug}' introuvable")
+        breadcrumb.append({"slug": next_node["slug"], "label": next_node["label"]})
+        node = next_node
+
+    return {
+        "section": section,
+        "slug": node["slug"],
+        "label": node["label"],
+        "image": node.get("image"),
+        "children": node.get("children", []),
+        "parts": node.get("parts", []),
+        "breadcrumb": breadcrumb,
     }
 
 

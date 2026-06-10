@@ -92,7 +92,9 @@ export default function PartsCategory() {
                   ) : (
                     <div className="text-sm text-slate-500 italic">Aucun sous-élément renseigné</div>
                   )}
-                  <div className="mt-2 text-xs text-slate-400 uppercase tracking-widest font-semibold">{c.count} pièces disponibles →</div>
+                  <div className="mt-2 text-xs text-slate-400 uppercase tracking-widest font-semibold">
+                    {c.sub_items?.length || 0} sous-{(c.sub_items?.length || 0) > 1 ? "catégories" : "catégorie"} →
+                  </div>
                 </div>
               </Link>
             </div>
