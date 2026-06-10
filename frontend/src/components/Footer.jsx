@@ -121,7 +121,7 @@ export default function Footer() {
 
       <div className="border-t border-white/10 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
-          <div>© {new Date().getFullYear()} BENOURI PIASUTO — Tous droits réservés.</div>
+          <div>© {new Date().getFullYear()} BENNOURI PIECES AUTO — Tous droits réservés.</div>
           <div className="font-mono uppercase tracking-widest text-red-500">Tunis · Tunisie</div>
         </div>
       </div>
