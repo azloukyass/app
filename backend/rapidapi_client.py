@@ -97,3 +97,62 @@ async def search_oem(model_id: int, search_param: str, lang_id: int = LANG_FR) -
     except Exception as e:
         logger.warning(f"RapidAPI search-oem error: {e}")
         return []
+
+
+async def find_article_by_oem(article_oem_no: str, lang_id: int = 4) -> Optional[Dict]:
+    """Step 1: POST /articles-oem/article-oem-search-no with the OEM reference.
+    Returns the FIRST matching article (with articleId) or None.
+    """
+    ref = (article_oem_no or "").strip()
+    if not ref:
+        return None
+    url = f"{API_BASE}/articles-oem/article-oem-search-no"
+    headers = {
+        "x-rapidapi-key": _api_key(),
+        "x-rapidapi-host": API_HOST,
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as cl:
+            r = await cl.post(url, headers=headers, data={"langId": lang_id, "articleOemNo": ref})
+            if r.status_code != 200:
+                logger.warning(f"RapidAPI article-oem-search → {r.status_code}: {r.text[:200]}")
+                return None
+            data = r.json()
+            if not isinstance(data, list) or not data:
+                return None
+            return data[0]
+    except Exception as e:
+        logger.warning(f"RapidAPI article-oem-search error: {e}")
+        return None
+
+
+async def article_complete_details(article_id: int, type_id: int = 1, lang_id: int = 4,
+                                    country_filter_id: int = 63) -> Optional[Dict]:
+    """Step 2: POST /articles/article-id-complete-details. Returns the full
+    article dict {articleId, articleNo, articleProductName, supplierName,
+    s3image, allSpecifications, oemNo, compatibleCars, …} or None."""
+    if not article_id:
+        return None
+    url = f"{API_BASE}/articles/article-id-complete-details"
+    headers = {
+        "x-rapidapi-key": _api_key(),
+        "x-rapidapi-host": API_HOST,
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as cl:
+            r = await cl.post(url, headers=headers, data={
+                "typeId": type_id,
+                "langId": lang_id,
+                "countryFilterId": country_filter_id,
+                "articleId": article_id,
+            })
+            if r.status_code != 200:
+                logger.warning(f"RapidAPI article-details → {r.status_code}: {r.text[:200]}")
+                return None
+            payload = r.json() or {}
+            return payload.get("article") or None
+    except Exception as e:
+        logger.warning(f"RapidAPI article-details error: {e}")
+        return None

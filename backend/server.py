@@ -24,7 +24,12 @@ from partsouq_scraper import scrape_vin as partsouq_scrape, scrape_subgroup_part
 from fadpro_client import search_reference as fadpro_search
 from iis_supplier_client import get_copia, get_partspro
 from email_service import send_welcome_email, send_order_confirmation, send_contact_to_admin
-from rapidapi_client import vin_lookup as rapid_vin_lookup, search_oem as rapid_search_oem
+from rapidapi_client import (
+    vin_lookup as rapid_vin_lookup,
+    search_oem as rapid_search_oem,
+    find_article_by_oem as rapid_find_article_by_oem,
+    article_complete_details as rapid_article_details,
+)
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -552,6 +557,44 @@ async def rapidapi_vin(vin: str):
     doc = {**info, "cached_at": datetime.now(timezone.utc).isoformat()}
     await db.tecdoc_vehicles.update_one({"vin": vin}, {"$set": doc}, upsert=True)
     return {**info, "source": "fresh"}
+
+
+@api.get("/rapidapi/article-info")
+async def rapidapi_article_info(ref: str, lang_id: int = 4, country_filter_id: int = 63):
+    """Two-step TecDoc lookup → full article details for a given OEM reference.
+    Cached per (ref-normalised, lang_id, country_filter_id) in MongoDB."""
+    ref = (ref or "").strip()
+    if not ref:
+        raise HTTPException(400, "Référence OEM requise")
+
+    cache_key = {"ref": ref.upper(), "lang_id": lang_id, "country_filter_id": country_filter_id}
+    cached = await db.tecdoc_article_cache.find_one(cache_key, {"_id": 0, "cached_at": 0})
+    if cached and cached.get("article"):
+        return {**cached, "source": "cache"}
+
+    first = await rapid_find_article_by_oem(ref, lang_id=lang_id)
+    if not first:
+        raise HTTPException(404, f"Aucun article TecDoc trouvé pour la référence {ref}")
+    article_id = first.get("articleId")
+    if not article_id:
+        raise HTTPException(404, f"Article sans ID pour {ref}")
+
+    details = await rapid_article_details(
+        article_id, type_id=1, lang_id=lang_id, country_filter_id=country_filter_id,
+    )
+    if not details:
+        # Fall back to the summary we already have
+        details = first
+
+    doc = {
+        **cache_key,
+        "article_id": article_id,
+        "article": details,
+        "summary": first,
+        "cached_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.tecdoc_article_cache.update_one(cache_key, {"$set": doc}, upsert=True)
+    return {**doc, "source": "fresh"}
 
 
 @api.get("/rapidapi/oem-search")

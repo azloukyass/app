@@ -95,7 +95,7 @@ function ResultsModal({ open, onClose, query, items, loading, error }) {
                 <Package className="w-5 h-5 text-white" />
               </div>
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-400 mb-0.5">FadPro · Catalogue local</div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-400 mb-0.5">BENNOURI STOCK local</div>
                 <h2 className="font-display text-xl sm:text-2xl font-black text-white tracking-tight uppercase" data-testid="fadpro-modal-title">
                   Résultats de recherche
                 </h2>
@@ -112,56 +112,11 @@ function ResultsModal({ open, onClose, query, items, loading, error }) {
           </div>
         </div>
 
-        {/* Top filter bar */}
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 inline-flex items-center gap-1.5">
-              <span className="w-3 h-px bg-red-500" /> Filtres rapides
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="relative">
-              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-              <input
-                type="text"
-                value={query || ""}
-                readOnly
-                placeholder="Référence ou Origine"
-                className="w-full pl-9 pr-3 py-2 text-sm text-slate-700 border border-slate-300 rounded-sm bg-white"
-              />
-            </div>
-            <input
-              type="text"
-              value={designation}
-              onChange={(e) => setDesignation(e.target.value)}
-              placeholder="Désignation"
-              className="px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 bg-white"
-            />
-            <input
-              type="text"
-              value={fournisseur}
-              onChange={(e) => setFournisseur(e.target.value)}
-              placeholder="Fournisseur"
-              className="px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 bg-white"
-            />
-            <input
-              type="text"
-              value={marque}
-              onChange={(e) => setMarque(e.target.value)}
-              placeholder="Modèle"
-              className="px-3 py-2 text-sm text-slate-900 border border-slate-300 rounded-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 bg-white"
-            />
-          </div>
-        </div>
-
         {/* Applied filter chip */}
         {query && (
           <div className="px-6 pt-4">
             <div className="bg-white border-l-4 border-red-600 pl-4 py-3 pr-4 rounded-sm shadow-sm flex items-center justify-between">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                  Filtre appliqué :
-                </div>
                 <div className="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-sm">
                   <Tag className="w-3.5 h-3.5 text-slate-500" />
                   <span className="text-sm font-mono-vin font-semibold text-slate-800">
@@ -181,7 +136,7 @@ function ResultsModal({ open, onClose, query, items, loading, error }) {
           {loading && (
             <div className="flex items-center justify-center py-20 text-slate-500">
               <Loader2 className="w-7 h-7 animate-spin mr-3 text-red-600" />
-              <span>Recherche chez FadPro en cours…</span>
+              <span>Recherche en cours…</span>
             </div>
           )}
 
@@ -250,7 +205,10 @@ function ResultsModal({ open, onClose, query, items, loading, error }) {
                           {item.reference}
                         </td>
                         <td className="px-4 py-3 text-slate-700 whitespace-nowrap font-semibold">
-                          {item.fournisseur || "—"}
+
+                            <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-sm">
+                             {item.fournisseur || "—"}
+                            </span>
                         </td>
                         <td className="px-4 py-3 text-slate-700">{item.designation || "—"}</td>
                         <td className="px-4 py-3 text-slate-500 text-xs leading-relaxed">{item.modele || "—"}</td>
@@ -318,7 +276,7 @@ function ResultsModal({ open, onClose, query, items, loading, error }) {
             </div>
             <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-xs text-slate-500">
-                Sélectionnez une quantité puis cliquez sur <ShoppingCart className="inline w-3 h-3 mx-1" /> pour ajouter au panier.
+                <strong>Sélectionnez une quantité puis cliquez sur <ShoppingCart className="inline w-3 h-3 mx-1" /> pour ajouter au panier.</strong>
               </div>
               <button
                 onClick={goToCart}

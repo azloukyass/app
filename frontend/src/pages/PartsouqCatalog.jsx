@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -282,6 +282,7 @@ export default function PartsouqCatalog() {
  * Each card supports quantity selection and "Add to cart".
  */
 function StockProductGrid({ items }) {
+  const navigate = useNavigate();
   const { add: addToCart } = useCart();
   const [qty, setQty] = useState({});
 
@@ -313,7 +314,8 @@ function StockProductGrid({ items }) {
         return (
           <div
             key={`${it.reference}-${i}`}
-            className="group bg-white border border-slate-200 hover:border-red-500 hover:shadow-xl transition-all rounded-sm overflow-hidden flex flex-col"
+            className="group bg-white border border-slate-200 hover:border-red-500 hover:shadow-xl transition-all rounded-sm overflow-hidden flex flex-col cursor-pointer"
+            onClick={() => navigate(`/article/${encodeURIComponent(it.oem_ref || it.reference)}`)}
             data-testid={`stock-card-${it.reference}`}
           >
             {/* Header strip */}
@@ -358,7 +360,7 @@ function StockProductGrid({ items }) {
                   </div>
                   <div className="inline-flex items-center border border-slate-300 rounded-sm">
                     <button
-                      onClick={() => setQuantity(it.reference, q - 1)}
+                      onClick={(e) => { e.stopPropagation(); setQuantity(it.reference, q - 1); }}
                       className="px-2 py-1.5 hover:bg-slate-50"
                       data-testid={`stock-qty-minus-${it.reference}`}
                       aria-label="Diminuer"
@@ -367,7 +369,7 @@ function StockProductGrid({ items }) {
                     </button>
                     <span className="px-3 text-sm font-bold w-8 text-center">{q}</span>
                     <button
-                      onClick={() => setQuantity(it.reference, q + 1)}
+                      onClick={(e) => { e.stopPropagation(); setQuantity(it.reference, q + 1); }}
                       className="px-2 py-1.5 hover:bg-slate-50"
                       data-testid={`stock-qty-plus-${it.reference}`}
                       aria-label="Augmenter"
@@ -378,11 +380,18 @@ function StockProductGrid({ items }) {
                 </div>
 
                 <button
-                  onClick={() => handleAdd(it)}
+                  onClick={(e) => { e.stopPropagation(); handleAdd(it); }}
                   className="w-full inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-black uppercase text-xs tracking-wider px-4 py-3 rounded-sm transition-colors shadow-lg shadow-red-900/20"
                   data-testid={`stock-add-cart-${it.reference}`}
                 >
                   <ShoppingCart className="w-4 h-4" /> Ajouter au panier
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigate(`/article/${encodeURIComponent(it.oem_ref || it.reference)}`); }}
+                  className="mt-2 w-full text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-red-600 transition-colors"
+                  data-testid={`stock-view-details-${it.reference}`}
+                >
+                  Voir détails de l&apos;article →
                 </button>
               </div>
             </div>

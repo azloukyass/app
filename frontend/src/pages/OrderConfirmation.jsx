@@ -134,34 +134,6 @@ export default function OrderConfirmation() {
           </div>
         </div>
       </section>
-
-      {/* Trust strip dark variant */}
-      <section className="bg-black border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-4">
-          {[
-            { Icon: Truck, title: "Livraison rapide", sub: "Partout en Tunisie" },
-            { Icon: Wallet, title: "Paiement à la livraison", sub: "Payez à réception" },
-            { Icon: Headphones, title: "Support client", sub: "À votre écoute" },
-            { Icon: ShieldCheck, title: "Produits originaux", sub: "Qualité garantie" },
-          ].map((b) => (
-            <div key={b.title} className="flex items-center gap-3">
-              <div className="w-12 h-14 flex items-center justify-center text-red-500">
-                <svg viewBox="0 0 64 80" className="w-10 h-12">
-                  <path
-                    d="M32 4 C 44 4, 56 18, 56 38 C 56 56, 44 74, 32 76 C 20 74, 8 56, 8 38 C 8 18, 20 4, 32 4 Z"
-                    fill="none" stroke="currentColor" strokeWidth="2.5"
-                  />
-                </svg>
-                <b.Icon className="w-5 h-5 -ml-9" />
-              </div>
-              <div>
-                <div className="font-display font-black uppercase text-sm text-white">{b.title}</div>
-                <div className="text-xs text-slate-400">{b.sub}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
