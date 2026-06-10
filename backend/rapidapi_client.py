@@ -99,7 +99,7 @@ async def search_oem(model_id: int, search_param: str, lang_id: int = LANG_FR) -
         return []
 
 
-async def find_article_by_oem(article_oem_no: str, lang_id: int = 4) -> Optional[Dict]:
+async def find_article_by_oem(article_oem_no: str, lang_id: int = LANG_FR) -> Optional[Dict]:
     """Step 1: POST /articles-oem/article-oem-search-no with the OEM reference.
     Returns the FIRST matching article (with articleId) or None.
     """
@@ -127,7 +127,7 @@ async def find_article_by_oem(article_oem_no: str, lang_id: int = 4) -> Optional
         return None
 
 
-async def article_complete_details(article_id: int, type_id: int = 1, lang_id: int = 4,
+async def article_complete_details(article_id: int, type_id: int = 1, lang_id: int = LANG_FR,
                                     country_filter_id: int = 63) -> Optional[Dict]:
     """Step 2: POST /articles/article-id-complete-details. Returns the full
     article dict {articleId, articleNo, articleProductName, supplierName,

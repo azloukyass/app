@@ -560,7 +560,7 @@ async def rapidapi_vin(vin: str):
 
 
 @api.get("/rapidapi/article-info")
-async def rapidapi_article_info(ref: str, lang_id: int = 4, country_filter_id: int = 63):
+async def rapidapi_article_info(ref: str, lang_id: int = 6, country_filter_id: int = 63):
     """Two-step TecDoc lookup → full article details for a given OEM reference.
     Cached per (ref-normalised, lang_id, country_filter_id) in MongoDB."""
     ref = (ref or "").strip()
