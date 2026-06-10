@@ -730,12 +730,12 @@ async def oem_stock_search(
             continue
         seen.add(ref)
         candidates.append({"ref": ref, "oem_name": it.get("name") or ""})
-        # Hard cap candidates to avoid hammering FadPro
-        if len(candidates) >= 60:
+        # Hard cap candidates to avoid ingress timeout (502)
+        if len(candidates) >= 20:
             break
 
     # 2. Multi-supplier (FadPro + Copia + PartsPro) lookups with concurrency cap
-    sem = asyncio.Semaphore(5)
+    sem = asyncio.Semaphore(10)
 
     async def lookup(c):
         async with sem:
@@ -745,7 +745,14 @@ async def oem_stock_search(
                 get_partspro().search_reference(c["ref"]),
             ]
             try:
-                fp, co, pp = await asyncio.gather(*tasks, return_exceptions=True)
+                # Cap each OEM-ref lookup to 8 s — prevents single slow supplier from blocking ingress
+                fp, co, pp = await asyncio.wait_for(
+                    asyncio.gather(*tasks, return_exceptions=True),
+                    timeout=8.0,
+                )
+            except asyncio.TimeoutError:
+                logging.warning(f"Multi-supplier lookup timed out for {c['ref']}")
+                return []
             except Exception as e:
                 logging.warning(f"Multi-supplier lookup failed for {c['ref']}: {e}")
                 return []
