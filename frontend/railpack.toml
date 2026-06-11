@@ -1,0 +1,3 @@
+[deploy]
+buildCommand = "yarn run build"
+startCommand = "npx serve -s build -l ${PORT:-3000}"
