@@ -59,7 +59,7 @@ export default function VehicleDetail() {
       } catch {}
     }, 6000);
     return () => clearInterval(interval);
-  }, [vehicle?.vin, vehicle?.partsouq_tree, setVehicle]);
+  }, [vehicle, vehicle?.vin, vehicle?.partsouq_tree, setVehicle]);
 
   if (loading || !vehicle) {
     return <div className="min-h-[60vh] flex items-center justify-center text-slate-500">Chargement du véhicule…</div>;
