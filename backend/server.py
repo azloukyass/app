@@ -32,6 +32,8 @@ from rapidapi_client import (
     article_complete_details as rapid_article_details,
 )
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
 mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ["DB_NAME"]]
