@@ -1039,15 +1039,18 @@ async def seed_admin():
 
 @app.on_event("startup")
 async def on_startup():
-    await db.users.create_index("email", unique=True)
-    await db.users.create_index("id")
-    await db.orders.create_index("user_id")
-    await db.orders.create_index("id")
-    await db.partsouq_cache.create_index("vin", unique=True)
-    await db.partsouq_subgroups.create_index([("vin", 1), ("cid", 1)], unique=True)
-    await db.tecdoc_vehicles.create_index("vin", unique=True)
-    await db.tecdoc_oem_cache.create_index([("model_id", 1), ("lang_id", 1), ("q", 1)], unique=True)
-    await seed_admin()
+    try:
+        await db.users.create_index("email", unique=True)
+        await db.users.create_index("id")
+        await db.orders.create_index("user_id")
+        await db.orders.create_index("id")
+        await db.partsouq_cache.create_index("vin", unique=True)
+        await db.partsouq_subgroups.create_index([("vin", 1), ("cid", 1)], unique=True)
+        await db.tecdoc_vehicles.create_index("vin", unique=True)
+        await db.tecdoc_oem_cache.create_index([("model_id", 1), ("lang_id", 1), ("q", 1)], unique=True)
+        await seed_admin()
+    except Exception as e:
+        logging.warning(f"MongoDB not available on startup: {e}. Will retry on next request.")
 
 
 app.add_middleware(
