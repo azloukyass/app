@@ -34,7 +34,15 @@ from rapidapi_client import (
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+_mongo_url_raw = os.environ.get("MONGO_URL", "").strip()
+if not _mongo_url_raw:
+    logging.warning(
+        "MONGO_URL is not set or is empty — falling back to mongodb://localhost:27017. "
+        "Set the MONGO_URL environment variable to the Railway MongoDB connection string."
+    )
+    _mongo_url_raw = "mongodb://localhost:27017"
+mongo_url = _mongo_url_raw
+logging.info("Connecting to MongoDB at: %s", mongo_url.split("@")[-1])  # hide credentials
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ["DB_NAME"]]
 
