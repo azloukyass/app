@@ -1077,6 +1077,11 @@ async def on_startup():
     except Exception as e:
         logging.warning(f"MongoDB not available on startup: {e}. Will retry on next request.")
 
+    for route in app.routes:
+        path = getattr(route, "path", "?")
+        methods = getattr(route, "methods", None)
+        logging.info(f"Registered route: {methods} {path}")
+
 
 app.include_router(api)
 
@@ -1110,15 +1115,6 @@ async def not_found_handler(request: Request, exc: Exception):
 @app.get("/")
 async def root():
     return {"name": "BENNOURI Pièces Auto", "status": "ok"}
-
-
-@app.on_event("startup")
-async def log_routes():
-    """Log all registered routes at startup to help debug missing-route issues."""
-    for route in app.routes:
-        path = getattr(route, "path", "?")
-        methods = getattr(route, "methods", None)
-        logging.info(f"Registered route: {methods} {path}")
 
 
 @app.on_event("shutdown")
