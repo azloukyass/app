@@ -1062,6 +1062,9 @@ async def seed_admin():
         )
 
 
+app.include_router(api)
+
+
 @app.on_event("startup")
 async def on_startup():
     try:
@@ -1081,9 +1084,6 @@ async def on_startup():
         path = getattr(route, "path", "?")
         methods = getattr(route, "methods", None)
         logging.info(f"Registered route: {methods} {path}")
-
-
-app.include_router(api)
 
 
 # ---------------------------------------------------------------------------
