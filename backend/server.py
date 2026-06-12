@@ -14,6 +14,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, BackgroundTasks
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
@@ -1021,9 +1022,21 @@ async def mark_message_read(message_id: str, admin: dict = Depends(require_admin
     return {"ok": True}
 
 
+@api.get("/debug")
+async def debug_routes():
+    """Debug endpoint to verify the router is registered and working."""
+    route_paths = [r.path for r in app.routes]
+    return {
+        "status": "ok",
+        "routes": "registered",
+        "registered_routes": route_paths,
+    }
+
+
 @api.get("/")
-async def root():
+async def api_root():
     return {"name": "BENNOURI Pièces Auto", "status": "ok"}
+
 
 
 async def seed_admin():
@@ -1065,14 +1078,47 @@ async def on_startup():
         logging.warning(f"MongoDB not available on startup: {e}. Will retry on next request.")
 
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-
 app.include_router(api)
+
+
+# ---------------------------------------------------------------------------
+# Catch-all 404 handler — ensures CORS headers are present even for missing
+# routes (FastAPI's default 404 bypasses CORSMiddleware in some edge cases).
+# ---------------------------------------------------------------------------
+CORS_ORIGINS = [
+    "https://frontend-production-9dc3.up.railway.app",
+    "http://localhost:3000",
+]
+
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in CORS_ORIGINS:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+        headers["Access-Control-Allow-Methods"] = "*"
+        headers["Access-Control-Allow-Headers"] = "*"
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Not Found"},
+        headers=headers,
+    )
 
 
 @app.get("/")
 async def root():
     return {"name": "BENNOURI Pièces Auto", "status": "ok"}
+
+
+@app.on_event("startup")
+async def log_routes():
+    """Log all registered routes at startup to help debug missing-route issues."""
+    for route in app.routes:
+        path = getattr(route, "path", "?")
+        methods = getattr(route, "methods", None)
+        logging.info(f"Registered route: {methods} {path}")
 
 
 @app.on_event("shutdown")
