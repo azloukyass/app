@@ -1065,9 +1065,14 @@ async def on_startup():
         logging.warning(f"MongoDB not available on startup: {e}. Will retry on next request.")
 
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
 app.include_router(api)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+@app.get("/")
+async def root():
+    return {"name": "BENNOURI Pièces Auto", "status": "ok"}
 
 
 @app.on_event("shutdown")
