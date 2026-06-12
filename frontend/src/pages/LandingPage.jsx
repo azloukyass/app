@@ -85,7 +85,7 @@ export default function LandingPage() {
         {/* Background image — full bleed, parts on the right, dark fade to the left */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/body_image.jpeg"
+            src="/body_image.jpg"
             alt="Pièces auto originales"
             className="absolute inset-0 w-full h-full object-cover object-center"
             onError={(e) => {
