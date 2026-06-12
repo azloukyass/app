@@ -63,6 +63,18 @@ def create_access_token(user_id: str, email: str) -> str:
 app = FastAPI(title="BENNOURI Pièces Auto API")
 api = APIRouter(prefix="/api")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=[
+        "https://frontend-production-9dc3.up.railway.app",
+        "http://localhost:3000",  # for local development
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
+
 
 class RegisterIn(BaseModel):
     name: str
@@ -1052,18 +1064,6 @@ async def on_startup():
     except Exception as e:
         logging.warning(f"MongoDB not available on startup: {e}. Will retry on next request.")
 
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=[
-        "https://frontend-production-9dc3.up.railway.app",
-        "http://localhost:3000",  # for local development
-    ],
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
 
 app.include_router(api)
 
