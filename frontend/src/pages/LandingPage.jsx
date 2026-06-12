@@ -81,7 +81,7 @@ export default function LandingPage() {
   return (
     <div className="bg-black text-white" data-testid="landing-page">
       {/* Hero — full-width banner with real auto parts photo */}
-      <section className="relative overflow-hidden bg-black min-h-[640px] lg:min-h-[680px] flex items-center" data-testid="hero-section">
+      <section className="relative overflow-hidden bg-black" data-testid="hero-section">
         {/* Background image — full bleed, parts on the right, dark fade to the left */}
         <div className="absolute inset-0 z-0">
           <img
