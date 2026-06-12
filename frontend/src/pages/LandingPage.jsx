@@ -87,7 +87,7 @@ export default function LandingPage() {
           <img
             src="/body_image.jpeg"
             alt="Pièces auto originales"
-            className="absolute inset-0 w-full h-full object-cover object-right"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             onError={(e) => {
               e.target.src = "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1920&q=80";
               e.target.onerror = null;
