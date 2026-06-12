@@ -85,7 +85,7 @@ export default function LandingPage() {
         {/* Background image — full bleed, parts on the right, dark fade to the left */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://customer-assets.emergentagent.com/job_mechanic-hub-200/artifacts/5q4klcwe_section%20body_vin%20.jpg"
+            src="/body_image.jpeg"
             alt="Pièces auto originales"
             className="absolute inset-0 w-full h-full object-cover object-right"
             onError={(e) => {
