@@ -85,20 +85,16 @@ export default function LandingPage() {
         {/* Background image — full bleed, parts on the right, dark fade to the left */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/body_image.jpg"
-            alt="Pièces auto originales"
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            onError={(e) => {
-              e.target.src = "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1920&q=80";
-              e.target.onerror = null;
-            }}
+              src="/body_image.jpg"
+              alt="Pièces auto originales"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+              onError={(e) => {
+                e.target.src = "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1920&q=80";
+                e.target.onerror = null;
+              }}
           />
-          {/* Strong left-to-transparent gradient so text is readable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/95 to-black/10" />
-          <div className="absolute inset-y-0 left-0 w-1/2 bg-black/60" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
-          {/* Red glow accent */}
-          <div className="absolute -right-40 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/20"/>
+
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 w-full">
