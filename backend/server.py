@@ -14,6 +14,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, BackgroundTasks
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
@@ -31,7 +32,17 @@ from rapidapi_client import (
     article_complete_details as rapid_article_details,
 )
 
-mongo_url = os.environ["MONGO_URL"]
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+_mongo_url_raw = os.environ.get("MONGO_URL", "").strip()
+if not _mongo_url_raw:
+    logging.warning(
+        "MONGO_URL is not set or is empty — falling back to mongodb://localhost:27017. "
+        "Set the MONGO_URL environment variable to the Railway MongoDB connection string."
+    )
+    _mongo_url_raw = "mongodb://localhost:27017"
+mongo_url = _mongo_url_raw
+logging.info("Connecting to MongoDB at: %s", mongo_url.split("@")[-1])  # hide credentials
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ["DB_NAME"]]
 
@@ -62,6 +73,18 @@ def create_access_token(user_id: str, email: str) -> str:
 
 app = FastAPI(title="BENNOURI Pièces Auto API")
 api = APIRouter(prefix="/api")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=[
+        "https://frontend-production-9dc3.up.railway.app",
+        "http://localhost:3000",  # for local development
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 
 class RegisterIn(BaseModel):
@@ -1009,9 +1032,21 @@ async def mark_message_read(message_id: str, admin: dict = Depends(require_admin
     return {"ok": True}
 
 
+@api.get("/debug")
+async def debug_routes():
+    """Debug endpoint to verify the router is registered and working."""
+    route_paths = [r.path for r in app.routes]
+    return {
+        "status": "ok",
+        "routes": "registered",
+        "registered_routes": route_paths,
+    }
+
+
 @api.get("/")
-async def root():
+async def api_root():
     return {"name": "BENNOURI Pièces Auto", "status": "ok"}
+
 
 
 async def seed_admin():
@@ -1037,31 +1072,59 @@ async def seed_admin():
         )
 
 
-@app.on_event("startup")
-async def on_startup():
-    await db.users.create_index("email", unique=True)
-    await db.users.create_index("id")
-    await db.orders.create_index("user_id")
-    await db.orders.create_index("id")
-    await db.partsouq_cache.create_index("vin", unique=True)
-    await db.partsouq_subgroups.create_index([("vin", 1), ("cid", 1)], unique=True)
-    await db.tecdoc_vehicles.create_index("vin", unique=True)
-    await db.tecdoc_oem_cache.create_index([("model_id", 1), ("lang_id", 1), ("q", 1)], unique=True)
-    await seed_admin()
-
-
 app.include_router(api)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+@app.on_event("startup")
+async def on_startup():
+    try:
+        await db.users.create_index("email", unique=True)
+        await db.users.create_index("id")
+        await db.orders.create_index("user_id")
+        await db.orders.create_index("id")
+        await db.partsouq_cache.create_index("vin", unique=True)
+        await db.partsouq_subgroups.create_index([("vin", 1), ("cid", 1)], unique=True)
+        await db.tecdoc_vehicles.create_index("vin", unique=True)
+        await db.tecdoc_oem_cache.create_index([("model_id", 1), ("lang_id", 1), ("q", 1)], unique=True)
+        await seed_admin()
+    except Exception as e:
+        logging.warning(f"MongoDB not available on startup: {e}. Will retry on next request.")
+
+    for route in app.routes:
+        path = getattr(route, "path", "?")
+        methods = getattr(route, "methods", None)
+        logging.info(f"Registered route: {methods} {path}")
+
+
+# ---------------------------------------------------------------------------
+# Catch-all 404 handler — ensures CORS headers are present even for missing
+# routes (FastAPI's default 404 bypasses CORSMiddleware in some edge cases).
+# ---------------------------------------------------------------------------
+CORS_ORIGINS = [
+    "https://frontend-production-9dc3.up.railway.app",
+    "http://localhost:3000",
+]
+
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in CORS_ORIGINS:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+        headers["Access-Control-Allow-Methods"] = "*"
+        headers["Access-Control-Allow-Headers"] = "*"
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Not Found"},
+        headers=headers,
+    )
+
+
+@app.get("/")
+async def root():
+    return {"name": "BENNOURI Pièces Auto", "status": "ok"}
 
 
 @app.on_event("shutdown")
