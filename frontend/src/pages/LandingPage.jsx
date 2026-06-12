@@ -172,16 +172,6 @@ export default function LandingPage() {
                 </a>
               </div>
             </form>
-
-            <div className="mt-8">
-              <Link
-                to="/recherche-vin"
-                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-sm tracking-wider px-7 py-3.5 rounded-sm transition-colors shadow-lg shadow-red-900/40"
-                data-testid="hero-cta-discover"
-              >
-                Découvrir nos produits <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
           </div>
         </div>
       </section>
