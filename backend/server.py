@@ -1055,7 +1055,10 @@ app.include_router(api)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://frontend-production-9dc3.up.railway.app",
+        "http://localhost:3000",  # for local development
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
