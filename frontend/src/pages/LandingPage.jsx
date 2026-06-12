@@ -177,97 +177,117 @@ export default function LandingPage() {
       </section>
 
       {/* Trust badges row — WHITE bg, polished marker badges */}
-      <section className="bg-white text-black" data-testid="trust-badges">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6">
-            {TRUST_BADGES.map((b, idx) => (
-              <div key={b.title} className="group flex items-center gap-5">
-                {/* Polished marker / leaf badge */}
-                <div className="relative flex-shrink-0 transition-transform duration-300 group-hover:-translate-y-1">
-                  <svg viewBox="0 0 72 88" className="w-16 h-20 sm:w-[72px] sm:h-[88px] drop-shadow-[0_6px_12px_rgba(220,38,38,0.18)]">
-                    <defs>
-                      <linearGradient id={`badge-fill-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#fff5f5" />
-                        <stop offset="100%" stopColor="#ffe4e6" />
-                      </linearGradient>
-                      <linearGradient id={`badge-stroke-${idx}`} x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="#ef4444" />
-                        <stop offset="100%" stopColor="#b91c1c" />
-                      </linearGradient>
-                    </defs>
-                    {/* Leaf / marker silhouette with subtle gradient fill */}
-                    <path
-                      d="M36 4 C 50 4, 64 20, 64 42 C 64 62, 50 80, 36 84 C 22 80, 8 62, 8 42 C 8 20, 22 4, 36 4 Z"
-                      fill={`url(#badge-fill-${idx})`}
-                      stroke={`url(#badge-stroke-${idx})`}
-                      strokeWidth="2.5"
-                    />
-                    {/* Inner highlight ring */}
-                    <path
-                      d="M36 12 C 47 12, 58 25, 58 42 C 58 58, 47 74, 36 77 C 25 74, 14 58, 14 42 C 14 25, 25 12, 36 12 Z"
-                      fill="none"
-                      stroke="#fecaca"
-                      strokeWidth="0.8"
-                    />
-                  </svg>
-                  {/* Icon centered above the curved part */}
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: 8 }}>
-                    <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center shadow-md shadow-red-700/30 transition-transform duration-300 group-hover:scale-110">
-                      <b.Icon className="w-4 h-4 text-white" strokeWidth={2.5} />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="font-display font-black text-black uppercase text-base sm:text-lg tracking-wide leading-tight">
-                    {b.title}
-                  </div>
-                  <div className="text-sm text-zinc-500 mt-1">{b.sub}</div>
-                </div>
+      <section className="bg-zinc-900 text-white" data-testid="trust-badges">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-zinc-700">
+
+            {/* Card 1 — Promo */}
+            <div className="relative flex items-center gap-4 p-6 overflow-hidden">
+              <img src="/brake_disc.jpg" alt=""
+                   className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20"/>
+              <div className="relative z-10">
+                <div className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Promo du mois</div>
+                <div className="text-3xl font-black text-red-500">-20%</div>
+                <div className="text-xs text-zinc-400 uppercase mt-1">Sur une sélection<br/>de pièces</div>
+                <Link to="/recherche-vin"
+                      className="mt-3 inline-block bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 transition-colors">
+                  Profiter
+                </Link>
               </div>
-            ))}
+            </div>
+
+            {/* Card 2 — Livraison */}
+            <div className="relative flex items-center gap-4 p-6 overflow-hidden">
+              <img src="/truck.jpg" alt="" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20"/>
+              <div className="relative z-10">
+                <div className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Livraison</div>
+                <div className="text-3xl font-black text-red-500">EN 24H</div>
+                <div className="text-xs text-zinc-400 uppercase mt-1">Sur toute<br/>la Tunisie</div>
+                <Link to="/contact"
+                      className="mt-3 inline-block bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 transition-colors">
+                  En savoir +
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 3 — Paiement */}
+            <div className="relative flex items-center gap-4 p-6 overflow-hidden">
+              <img src="/secure.jpg" alt="" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20"/>
+              <div className="relative z-10">
+                <div className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Paiement</div>
+                <div className="text-3xl font-black text-red-500">SÉCURISÉ</div>
+                <div className="text-xs text-zinc-400 uppercase mt-1">100% sûr</div>
+                <Link to="/contact"
+                      className="mt-3 inline-block bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 transition-colors">
+                  En savoir +
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 4 — Support */}
+            <div className="relative flex items-center gap-4 p-6 overflow-hidden">
+              <img src="/headphones.jpg" alt=""
+                   className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-20"/>
+              <div className="relative z-10">
+                <div className="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">Besoin d'aide ?</div>
+                <div className="text-lg font-black text-white leading-tight uppercase">Notre équipe est<br/>à votre
+                  disposition
+                </div>
+                <div className="text-red-500 font-bold text-sm mt-1">☎ +216 54 643 643</div>
+                <Link to="/contact"
+                      className="mt-3 inline-block bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 transition-colors">
+                  Contacter
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
-
       {/* Catégories populaires — WHITE bg */}
       <section className="bg-white text-black" data-testid="popular-categories">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600 mb-2">Découvrez nos catégories</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600 mb-2">Découvrez nos
+                catégories
+              </div>
               <h2 className="font-display font-black text-3xl sm:text-4xl text-black tracking-tight uppercase">
                 Catégories populaires
               </h2>
             </div>
-            <Link to="/recherche-vin" className="text-sm font-semibold text-red-600 hover:text-red-700 inline-flex items-center gap-1">
-              Voir toutes les catégories <ArrowRight className="w-4 h-4" />
+            <Link to="/recherche-vin"
+                  className="text-sm font-semibold text-red-600 hover:text-red-700 inline-flex items-center gap-1">
+              Voir toutes les catégories <ArrowRight className="w-4 h-4"/>
             </Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {POPULAR_CATEGORIES.map((c) => (
-              <Link
-                key={c.key}
-                to="/recherche-vin"
-                className="group relative bg-zinc-50 border border-zinc-200 hover:border-red-600 rounded-sm overflow-hidden aspect-square flex flex-col items-center justify-center p-4 transition-all hover:bg-white hover:shadow-xl"
-                data-testid={`popular-cat-${c.key}`}
-              >
-                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-red-600/0 group-hover:bg-red-600/10 rounded-full blur-2xl transition-colors" />
-                <div className="relative w-full h-2/3 flex items-center justify-center">
-                  <c.Icon className="w-full h-full max-w-[80px] group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="relative mt-2 text-center">
-                  <div className="font-display font-bold text-black text-sm uppercase tracking-wide">{c.label}</div>
-                  <div className="text-[10px] text-red-600 mt-0.5 font-semibold">{c.count}</div>
-                </div>
-              </Link>
+                <Link
+                    key={c.key}
+                    to="/recherche-vin"
+                    className="group relative bg-zinc-50 border border-zinc-200 hover:border-red-600 rounded-sm overflow-hidden aspect-square flex flex-col items-center justify-center p-4 transition-all hover:bg-white hover:shadow-xl"
+                    data-testid={`popular-cat-${c.key}`}
+                >
+                  <div
+                      className="absolute -right-4 -bottom-4 w-20 h-20 bg-red-600/0 group-hover:bg-red-600/10 rounded-full blur-2xl transition-colors"/>
+                  <div className="relative w-full h-2/3 flex items-center justify-center">
+                    <c.Icon className="w-full h-full max-w-[80px] group-hover:scale-110 transition-transform"/>
+                  </div>
+                  <div className="relative mt-2 text-center">
+                    <div className="font-display font-bold text-black text-sm uppercase tracking-wide">{c.label}</div>
+                    <div className="text-[10px] text-red-600 mt-0.5 font-semibold">{c.count}</div>
+                  </div>
+                </Link>
             ))}
           </div>
         </div>
       </section>
 
       {/* Constructeurs / Brands — WHITE bg */}
-      <section id="brands-section" className="bg-zinc-50 text-black border-y border-zinc-200" data-testid="brands-section">
+      <section id="brands-section" className="bg-zinc-50 text-black border-y border-zinc-200"
+               data-testid="brands-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 gap-3">
             <div>
@@ -281,12 +301,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10" data-testid="brands-grid">
+          <div
+              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-10"
+              data-testid="brands-grid">
             {BRANDS.map((b) => (
-              <Link
-                key={b.slug}
-                to={`/marque/${b.slug}`}
-                className="brand-card-light group flex flex-col items-center justify-center p-3 transition-all duration-300"
+                <Link
+                    key={b.slug}
+                    to={`/marque/${b.slug}`}
+                    className="brand-card-light group flex flex-col items-center justify-center p-3 transition-all duration-300"
                 style={{ "--brand-color": b.color }}
                 data-testid={`brand-card-${b.slug}`}
               >
