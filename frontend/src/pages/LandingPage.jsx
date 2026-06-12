@@ -81,7 +81,9 @@ export default function LandingPage() {
   return (
     <div className="bg-black text-white" data-testid="landing-page">
       {/* Hero — full-width banner with real auto parts photo */}
-      <section className="relative overflow-hidden bg-black" data-testid="hero-section">
+      <section  className="relative overflow-hidden bg-black"
+                style={{ aspectRatio: "3/1" }}
+                data-testid="hero-section">
         {/* Background image — full bleed, parts on the right, dark fade to the left */}
         <div className="absolute inset-0 z-0">
           <img
@@ -97,9 +99,11 @@ export default function LandingPage() {
 
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-20 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full h-full flex items-center"
+             style={{minHeight: "100%"}}>
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-red-500 mb-4">
+            <div
+                className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-red-500 mb-4">
               <span className="w-6 h-px bg-red-500"></span> Pièces auto en Tunisie
             </div>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] tracking-tight text-white">
