@@ -45,9 +45,7 @@ const MENU = [
   { key: "dashboard", label: "Tableau de bord", Icon: LayoutDashboard, view: "dashboard" },
   { key: "orders", label: "Mes commandes", Icon: ShoppingBag, view: "orders" },
   { key: "favorites", label: "Mes favoris", Icon: Heart, view: "favorites" },
-  { key: "addresses", label: "Mes adresses", Icon: MapPin, view: "addresses" },
   { key: "personal", label: "Mes informations personnelles", Icon: UserCircle, view: "personal" },
-  { key: "password", label: "Changer le mot de passe", Icon: Lock, view: "password" },
 ];
 
 const RECOMMENDED = [
@@ -421,9 +419,6 @@ function DashboardView({ user, orders, setView }) {
         <div className="bg-white border border-slate-100 rounded-md p-6" data-testid="account-info-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-lg font-bold text-slate-900">Informations du compte</h3>
-            <button className="text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 px-3 py-1.5 rounded-sm inline-flex items-center gap-1">
-              <Edit2 className="w-3 h-3" /> Modifier
-            </button>
           </div>
 
           <div className="space-y-5">
@@ -628,7 +623,7 @@ export default function Account() {
           </nav>
 
           {/* Help block */}
-          <div className="p-4 border-t border-slate-800">
+          <div className="p-4 pb-[50rem] border-t border-slate-800">
             <div className="bg-slate-800/40 border border-slate-700/50 rounded-md p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Headphones className="w-5 h-5 text-red-400" />
