@@ -298,37 +298,38 @@ CATALOG = {
         "description": "Pare-chocs, ailes, capots, portes, vitres et pièces de carrosserie.",
         "categories": [
             {
-                "slug": "av", "label": "Avant (AV)", "image": PEX(1545743), "children": [
-                {"slug": "capot-moteur", "label": "Capot moteur", "image": PEX(1545743), "children": []},
-                {"slug": "aile-av", "label": "Aile AV", "image": PEX(1545743), "children": []},
+                "slug": "av", "label": "Avant (AV)", "icon": "brake", "image": PEX(1545743), "children": [
+                {"slug": "capot-moteur", "label": "Capot moteur", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "aile-av", "label": "Aile AV", "icon": "brake", "image": PEX(1545743), "children": []},
                 {
-                    "slug": "parechoc-av", "label": "Pare-choc AV", "image": PEX(1545743), "children": [
-                    {"slug": "spoiler", "label": "Spoiler", "image": PEX(1545743), "children": []},
-                    {"slug": "grille-centrale", "label": "Grille centrale", "image": PEX(1545743), "children": []},
-                    {"slug": "cache-antibrouillard", "label": "Cache antibrouillard", "image": PEX(1545743), "children": []},
+                    "slug": "parechoc-av", "label": "Pare-choc AV", "icon": "brake", "image": PEX(1545743), "children": [
+                    {"slug": "spoiler", "label": "Spoiler", "icon": "brake", "image": PEX(1545743), "children": []},
+                    {"slug": "grille-centrale", "label": "Grille centrale", "icon": "brake",  "image": PEX(1545743), "children": []},
+                    {"slug": "cache-antibrouillard", "label": "Cache antibrouillard", "icon": "brake", "image": PEX(1545743),
+                     "children": []},
                 ]
                 },
-                {"slug": "cache-moteur", "label": "Cache moteur", "image": PEX(1545743), "children": []},
-                {"slug": "calandre", "label": "Calandre", "image": PEX(1545743), "children": []},
-                {"slug": "plage-av", "label": "Plage AV", "image": PEX(1545743), "children": []},
-                {"slug": "support-plage", "label": "Support plage", "image": PEX(1545743), "children": []},
-                {"slug": "traverse-sup", "label": "Traverse supérieure", "image": PEX(1545743), "children": []},
-                {"slug": "traverse-sup-inf", "label": "Traverse Sup/Inf", "image": PEX(1545743), "children": []},
-                {"slug": "berceau", "label": "Berceau", "image": PEX(1545743), "children": []},
-                {"slug": "pare-boue-av", "label": "Pare-boue AV", "image": PEX(1545743), "children": []},
-                {"slug": "support-parechoc-av", "label": "Support pare-choc AV", "image": PEX(1545743), "children": []},
-                {"slug": "porte-av", "label": "Porte AV", "image": PEX(1545743), "children": []},
-                {"slug": "support-parachoc-av2", "label": "Support paracloc AV", "image": PEX(1545743), "children": []},
+                {"slug": "cache-moteur", "label": "Cache moteur", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "calandre", "label": "Calandre", "icon": "brake",  "image": PEX(1545743), "children": []},
+                {"slug": "plage-av", "label": "Plage AV",  "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "support-plage", "label": "Support plage", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "traverse-sup", "label": "Traverse supérieure", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "traverse-sup-inf", "label": "Traverse Sup/Inf", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "berceau", "label": "Berceau", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "pare-boue-av", "label": "Pare-boue AV", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "support-parechoc-av", "label": "Support pare-choc AV", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "porte-av", "label": "Porte AV", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "support-parachoc-av2", "label": "Support paracloc AV", "icon": "brake", "image": PEX(1545743), "children": []},
             ]
             },
             {
-                "slug": "ar", "label": "Arrière (AR)", "image": PEX(1545743), "children": [
-                {"slug": "parechoc-ar", "label": "Pare-choc AR", "image": PEX(1545743), "children": []},
-                {"slug": "malle-ar", "label": "Malle AR","image": PEX(1545743), "children": []},
-                {"slug": "traverse-ar", "label": "Traverse AR", "image": PEX(1545743), "children": []},
-                {"slug": "porte-ar", "label": "Porte AR", "image": PEX(1545743), "children": []},
-                {"slug": "support-parechoc-ar", "label": "Support pare-choc AR", "image": PEX(1545743), "children": []},
-                {"slug": "jeep-ar", "label": "Jeep AR", "image": PEX(1545743), "children": []},
+                "slug": "ar", "label": "Arrière (AR)", "icon": "brake",  "image": PEX(1545743), "children": [
+                {"slug": "parechoc-ar", "label": "Pare-choc AR", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "malle-ar", "label": "Malle AR",  "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "traverse-ar", "label": "Traverse AR", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "porte-ar", "label": "Porte AR", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "support-parechoc-ar", "label": "Support pare-choc AR", "icon": "brake", "image": PEX(1545743), "children": []},
+                {"slug": "jeep-ar", "label": "Jeep AR",  "icon": "brake", "image": PEX(1545743), "children": []},
             ]
             },
         ],
