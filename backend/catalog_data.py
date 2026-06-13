@@ -141,131 +141,154 @@ CATALOG = {
         "description": "Batterie, démarrage, éclairage, électronique embarquée et confort.",
         "categories": [
             {
-                "slug": "generalites",
-                "label": "Généralités",
-                "icon": "fuses",
-                "image": PEX(4480455),
-                "sub_items": [
-                    "Affectation des fusibles", "Prises / bornes / connecteurs", "Épissures",
-                    "Interconnexions", "Implantations", "Boîtiers / platines / coffrets", "Divers",
+                "slug": "bougie",
+                "label": "Bougie",
+                "icon": "engine",
+                "image": PEX(4489732),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
-                "parts": [
-                    _p("EL-9001", "Kit de fusibles complet", 28.000, "FEBI", PEX(4480455)),
-                    _p("EL-9003", "Boîtier de fusibles", 180.000, "BOSCH", PEX(4480455)),
-                ],
+                "parts": [],
             },
             {
-                "slug": "electricite-moteur",
-                "label": "Électricité moteur",
-                "icon": "battery",
-                "image": PEX(190574),
-                "sub_items": [
-                    "Démarrage", "Génération de courant", "Préchauffage", "Batterie", "Batterie de traction",
+                "slug": "bobine-allumage",
+                "label": "Bobine d'allumage",
+                "icon": "gearbox",
+                "image": PEX(13065690),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
-                "parts": [
-                    _p("EL-7001", "Batterie 60Ah 540A", 240.000, "VARTA", PEX(190574)),
-                    _p("EL-7002", "Batterie 70Ah 760A", 295.000, "BOSCH", PEX(190574)),
-                    _p("EL-7003", "Démarreur 1.2kW", 380.000, "VALEO", PEX(190574)),
-                    _p("EL-7004", "Alternateur 110A", 420.000, "DENSO", PEX(190574)),
-                    _p("EL-7005", "Bougie de préchauffage (x4)", 68.000, "NGK", PEX(190574)),
-                ],
+                "parts": [],
             },
             {
-                "slug": "faisceaux",
-                "label": "Faisceaux électriques",
-                "icon": "wiring",
-                "image": PEX(4480455),
-                "sub_items": [
-                    "Connectique", "Faisceaux avant", "Faisceaux centraux",
-                    "Faisceaux arrière", "Câble haute tension / 12V",
+                "slug": "optique",
+                "label": "Optique G+D",
+                "icon": "suspension",
+                "image": PEX(4480456),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
-                "parts": [
-                    _p("EL-9002", "Faisceau avant moteur", 320.000, "DELPHI", PEX(4480455)),
-                    _p("EL-9004", "Sonde lambda", 145.000, "BOSCH", PEX(4480455)),
-                ],
+                "parts": [],
             },
             {
-                "slug": "eclairage",
-                "label": "Éclairage - signalisation",
-                "icon": "headlight",
-                "image": PEX(2127733),
-                "sub_items": [
-                    "Éclairage intérieur", "Éclairage extérieur", "Signalisation", "Commandes sous volant",
+                "slug": "feu-ar",
+                "label": "Feu AR G+D",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
-                "parts": [
-                    _p("EL-8001", "Phare avant LED gauche", 480.000, "HELLA", PEX(2127733)),
-                    _p("EL-8002", "Phare avant LED droit", 480.000, "HELLA", PEX(2127733)),
-                    _p("EL-8003", "Feu arrière gauche", 145.000, "VALEO", PEX(112460)),
-                    _p("EL-8004", "Feu arrière droit", 145.000, "VALEO", PEX(112460)),
-                    _p("EL-8005", "Kit ampoules H7 LED", 95.000, "OSRAM", PEX(2127733)),
-                    _p("EL-8006", "Antibrouillard avant", 110.000, "HELLA", PEX(2127733)),
-                ],
+                "parts": [],
             },
             {
-                "slug": "informations-conducteur",
-                "label": "Informations conducteur",
-                "icon": "info",
-                "image": PEX(3807345),
-                "sub_items": [
-                    "Combiné", "Messages, sons et témoins éclairage - signalisation",
-                    "Messages, sons et témoins groupe motopropulseur",
-                    "Messages, sons et témoins protections et ouvrants",
-                    "Messages, sons et témoins poste de conduite",
-                    "Messages, sons et témoins aide à la conduite",
-                    "Messages, sons et témoins lavage et essuyage",
-                    "Messages, sons et témoins confort et vie à bord",
-                    "Messages, sons et témoins accessoires", "Systèmes d'affichage",
+                "slug": "feu-de-position",
+                "label": "Feu de position",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
-                "parts": [
-                    _p("EL-IC-001", "Combiné d'instruments", 380.000, "VDO", PEX(3807345)),
-                    _p("EL-IC-002", "Écran multifonction central", 520.000, "VALEO", PEX(3807345)),
-                    _p("EL-IC-003", "Avertisseur sonore (klaxon)", 48.000, "BOSCH", PEX(4480455)),
-                ],
+                "parts": [],
             },
             {
-                "slug": "lavage-essuyage",
-                "label": "Lavage et essuyage",
-                "icon": "wiper",
-                "image": PEX(919073),
-                "sub_items": ["Lavage", "Essuyage", "Commandes sous volant"],
-                "parts": [
-                    _p("EL-10001", "Balais d'essuie-glace (paire)", 42.000, "BOSCH", PEX(919073)),
-                    _p("EL-10002", "Moteur essuie-glace avant", 195.000, "VALEO", PEX(919073)),
-                    _p("EL-10003", "Pompe lave-glace", 38.000, "FEBI", PEX(919073)),
-                    _p("EL-10004", "Balai essuie-glace arrière", 18.500, "BOSCH", PEX(919073)),
+                "slug": "culipe-bougie",
+                "label": "Culipe bougie",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
+                "parts": [],
             },
             {
-                "slug": "protections-ouvrants",
-                "label": "Protections et ouvrants",
-                "icon": "alarm",
-                "image": PEX(244553),
-                "sub_items": [
-                    "Antidémarrage", "Alarme", "Verrouillage / déverrouillage",
-                    "Porte latérale coulissante", "Lève-vitres", "Coffre motorisé",
-                    "Ceintures de sécurité", "Coussins gonflables", "Choc piéton", "Toit / rideau",
+                "slug": "capteur-arb-acave",
+                "label": "Capteur ARB A'Cave",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
-                "parts": [
-                    _p("EL-11001", "Alarme antivol universelle", 240.000, "COBRA", PEX(244553)),
-                    _p("EL-11002", "Moteur lève-vitre avant", 165.000, "VALEO", PEX(1638459)),
-                    _p("EL-11003", "Centrale clignotants", 35.000, "HELLA", PEX(4480455)),
-                    _p("EL-PO-004", "Ceinture de sécurité avant", 95.000, "TRW", PEX(244553)),
-                ],
+                "parts": [],
             },
             {
-                "slug": "poste-conduite",
-                "label": "Poste de conduite",
-                "icon": "seat",
-                "image": PEX(3807345),
-                "sub_items": [
-                    "Rétroviseurs", "Colonne de direction", "Sièges",
-                    "Mémorisation poste de conduite", "Commandes sous volant",
+                "slug": "capteur-abs",
+                "label": "Capteur ABS",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
-                "parts": [
-                    _p("EL-PC-001", "Rétroviseur intérieur jour/nuit", 45.000, "OEM", PEX(100650)),
-                    _p("EL-PC-002", "Module mémorisation siège", 280.000, "OEM", PEX(3807345)),
-                    _p("EL-PC-003", "Commodo sous volant gauche", 95.000, "VALEO", PEX(3807345)),
+                "parts": [],
+            },
+            {
+                "slug": "antibrouillard",
+                "label": "Antibrouillard",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
                 ],
+                "parts": [],
+            },
+            {
+                "slug": "retrouneuse",
+                "label": "Rétroviseur",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
+                ],
+                "parts": [],
+            },
+            {
+                "slug": "porte-pass",
+                "label": "Porte Pass",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
+                ],
+                "parts": [],
+            },
+            {
+                "slug": "klaxon",
+                "label": "Klaxon",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
+                ],
+                "parts": [],
+            },
+            {
+                "slug": "sond-pompe-a",
+                "label": "Sonde pompe A",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "children": [
+                    {"slug": "Bouton lave-vitre", "label": "Bouton lave-vitre", "children": [
+                    ]},
+                ],
+                "parts": [],
+            },
+            {
+                "slug": "batterie",
+                "label": "Batterie",
+                "icon": "brake",
+                "image": PEX(1545743),
+                "parts": [],
             },
         ],
     },
