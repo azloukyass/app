@@ -99,6 +99,148 @@ async def search_oem(model_id: int, search_param: str, lang_id: int = LANG_FR) -
         return []
 
 
+# Common automotive part categories used to build the OEM catalog tree.
+# Each entry is a (group_label, [search_terms]) pair.  We fire one RapidAPI
+# request per search term and aggregate the returned product-group names into
+# a two-level tree that mirrors the PartSouq structure expected by the frontend.
+_CATALOG_QUERIES = [
+    ("Moteur",          ["moteur", "culasse", "joint moteur", "soupape", "piston", "vilebrequin"]),
+    ("Distribution",    ["courroie distribution", "tendeur", "pompe eau"]),
+    ("Alimentation",    ["filtre carburant", "pompe carburant", "injecteur", "carburateur"]),
+    ("Refroidissement", ["radiateur", "thermostat", "ventilateur refroidissement"]),
+    ("Lubrification",   ["filtre huile", "carter huile", "jauge huile"]),
+    ("Freinage",        ["frein", "disque frein", "plaquette frein", "etrier frein", "maitre cylindre"]),
+    ("Suspension",      ["amortisseur", "ressort suspension", "rotule", "silent bloc", "barre stabilisatrice"]),
+    ("Direction",       ["direction", "cremaillere", "rotule direction", "colonne direction"]),
+    ("Transmission",    ["embrayage", "boite vitesse", "arbre transmission", "joint homocinétique"]),
+    ("Électrique",      ["alternateur", "demarreur", "batterie", "bougie", "bobine allumage"]),
+    ("Éclairage",       ["phare", "feu arriere", "ampoule", "clignotant"]),
+    ("Carrosserie",     ["pare choc", "aile", "capot", "porte", "retroviseur", "pare brise"]),
+    ("Climatisation",   ["compresseur climatisation", "filtre habitacle", "condenseur"]),
+    ("Échappement",     ["pot echappement", "catalyseur", "sonde lambda"]),
+    ("Filtration",      ["filtre air", "filtre huile", "filtre carburant", "filtre habitacle"]),
+]
+
+
+async def fetch_catalog_tree(model_id: int, lang_id: int = LANG_FR) -> List[Dict]:
+    """Build a PartSouq-compatible catalog tree for a vehicle using RapidAPI TecDoc.
+
+    Fires multiple OEM-search requests (one per search term) concurrently,
+    collects the returned product-group names, and assembles them into a
+    two-level tree:
+        [{id, label, children: [{id, label, cid, url, group_num, has_link}]}]
+
+    This mirrors the structure produced by partsouq_scraper._build_tree() so
+    the frontend VehicleDetail / PartsouqCatalog pages work without changes.
+    """
+    import asyncio
+    import urllib.parse
+
+    if not model_id:
+        return []
+
+    # Collect all (group_label, search_term) pairs
+    tasks_meta = []
+    for group_label, terms in _CATALOG_QUERIES:
+        for term in terms:
+            tasks_meta.append((group_label, term))
+
+    async def _query(group_label: str, term: str):
+        sp_enc = urllib.parse.quote(term, safe="")
+        url = (
+            f"{API_BASE}/articles-oem/selecting-oem-parts-vehicle-modification-description-product-group"
+            f"/type-id/{TYPE_ID}/vehicle-id/{model_id}/lang-id/{lang_id}/search-param/{sp_enc}"
+        )
+        try:
+            async with httpx.AsyncClient(timeout=20.0) as cl:
+                r = await cl.get(url, headers=_headers())
+                if r.status_code != 200:
+                    return group_label, []
+                data = r.json()
+                if not isinstance(data, list):
+                    return group_label, []
+                # Collect unique product-group names returned for this term
+                names = []
+                seen = set()
+                for item in data:
+                    pg = (item.get("articleProductName") or "").strip()
+                    if pg and pg not in seen:
+                        seen.add(pg)
+                        names.append(pg)
+                return group_label, names
+        except Exception as e:
+            logger.warning(f"fetch_catalog_tree query '{term}': {e}")
+            return group_label, []
+
+    # Run all queries concurrently (cap concurrency to avoid rate-limiting)
+    sem = asyncio.Semaphore(8)
+
+    async def _bounded(group_label, term):
+        async with sem:
+            return await _query(group_label, term)
+
+    raw_results = await asyncio.gather(
+        *[_bounded(gl, t) for gl, t in tasks_meta],
+        return_exceptions=True,
+    )
+
+    # Aggregate: group_label → set of product-group names (children)
+    from collections import OrderedDict
+    groups: dict = OrderedDict()
+    for group_label, _ in _CATALOG_QUERIES:
+        groups[group_label] = OrderedDict()
+
+    for result in raw_results:
+        if isinstance(result, Exception):
+            continue
+        group_label, names = result
+        if group_label not in groups:
+            continue
+        for name in names:
+            if name not in groups[group_label]:
+                groups[group_label][name] = True
+
+    # Build the tree structure (mirrors partsouq_scraper._build_tree output)
+    tree = []
+    group_idx = 0
+    for group_label, children_map in groups.items():
+        if not children_map:
+            continue
+        group_idx += 1
+        group_id = str(group_idx)
+        children = []
+        child_idx = 0
+        for child_label in children_map:
+            child_idx += 1
+            children.append({
+                "id": f"{group_id}-{child_idx}",
+                "parent_id": group_id,
+                "label": child_label,
+                "cid": "",        # no PartSouq cid — TecDoc-sourced
+                "url": "",
+                "group_num": str(child_idx),
+                "has_link": False,
+                "source": "tecdoc",
+            })
+        tree.append({
+            "id": group_id,
+            "parent_id": None,
+            "label": group_label,
+            "cid": "",
+            "url": "",
+            "group_num": str(group_idx),
+            "has_link": False,
+            "children": children,
+            "source": "tecdoc",
+        })
+
+    logger.info(
+        f"fetch_catalog_tree model_id={model_id}: {len(tree)} groups, "
+        f"{sum(len(g['children']) for g in tree)} subgroups"
+    )
+    return tree
+
+
 async def find_article_by_oem(article_oem_no: str, lang_id: int = LANG_FR) -> Optional[Dict]:
     """Step 1: POST /articles-oem/article-oem-search-no with the OEM reference.
     Returns the FIRST matching article (with articleId) or None.

@@ -30,6 +30,7 @@ from rapidapi_client import (
     search_oem as rapid_search_oem,
     find_article_by_oem as rapid_find_article_by_oem,
     article_complete_details as rapid_article_details,
+    fetch_catalog_tree as rapid_fetch_catalog_tree,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -415,9 +416,11 @@ async def decode_vin(payload: VinIn):
     info = None
 
     # 1. Try RapidAPI TecDoc first (fast & accurate for all brands)
+    tecdoc_model_id = None
     try:
         td = await rapid_vin_lookup(vin)
         if td and td.get("manu_name"):
+            tecdoc_model_id = td.get("model_id")
             info = {
                 "make": td.get("manu_name") or "",
                 "model": td.get("model_name") or "",
@@ -425,7 +428,7 @@ async def decode_vin(payload: VinIn):
                 "fuel": "—",
                 "engine": "—",
                 "trim": "—",
-                "tecdoc_model_id": td.get("model_id"),
+                "tecdoc_model_id": tecdoc_model_id,
                 "source": "tecdoc",
             }
     except Exception as e:
@@ -532,7 +535,41 @@ async def decode_vin(payload: VinIn):
         else:
             raise HTTPException(404, "Impossible d'identifier ce VIN. Vérifiez le numéro et réessayez.")
 
-    return {"vin": vin, **info}
+    # 5. Fetch OEM catalog tree from RapidAPI TecDoc and populate partsouq_tree
+    # This replaces the broken ScrapingBee/PartSouq flow — data is available immediately.
+    partsouq_tree = []
+    model_id_for_tree = tecdoc_model_id or info.get("tecdoc_model_id")
+    if model_id_for_tree:
+        try:
+            partsouq_tree = await rapid_fetch_catalog_tree(model_id_for_tree)
+            logging.info(f"TecDoc catalog tree for VIN {vin}: {len(partsouq_tree)} groups")
+        except Exception as e:
+            logging.warning(f"TecDoc catalog tree fetch failed for VIN {vin}: {e}")
+
+    # Cache the result so /vin/partsouq-status/{vin} returns it immediately too
+    if partsouq_tree:
+        try:
+            cache_doc = {
+                "vin": vin,
+                "make": info.get("make", ""),
+                "model": info.get("model", ""),
+                "year": info.get("year", "—"),
+                "fuel": info.get("fuel", "—"),
+                "engine": info.get("engine", "—"),
+                "trim": info.get("trim", "—"),
+                "tecdoc_model_id": model_id_for_tree,
+                "source": "tecdoc",
+                "partsouq_tree": partsouq_tree,
+                "partsouq_categories": [],
+                "cached_at": datetime.now(timezone.utc).isoformat(),
+            }
+            await db.partsouq_cache.update_one(
+                {"vin": vin}, {"$set": cache_doc}, upsert=True
+            )
+        except Exception as e:
+            logging.warning(f"Failed to cache TecDoc catalog tree for VIN {vin}: {e}")
+
+    return {"vin": vin, **info, "partsouq_tree": partsouq_tree}
 
 
 @api.get("/vin/partsouq-status/{vin}")
