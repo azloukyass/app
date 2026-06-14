@@ -7,9 +7,11 @@ Email service for BENNOURI Pièces Auto.
 
 import os
 import ssl
+import socket
 import smtplib
 import logging
 import asyncio
+import traceback
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -52,25 +54,94 @@ def _send_sync(to: str, subject: str, html: str, reply_to: Optional[str] = None)
     msg.attach(MIMEText(text_fallback, "plain", "utf-8"))
     msg.attach(MIMEText(html, "html", "utf-8"))
 
+    host = cfg["host"]
+    port = cfg["port"]
+    user = cfg["user"]
+    from_email = cfg["from_email"]
+
+    logger.info(f"SMTP: attempting connection to {host}:{port} (user={user}, to={to})")
+
     try:
+        logger.info("SMTP: creating SSL context")
         ctx = ssl.create_default_context()
+        logger.info(f"SMTP: SSL context created — protocol={ctx.protocol}, verify_mode={ctx.verify_mode}")
+
         # Port 465 → implicit SSL/TLS; 587 → STARTTLS
-        if cfg["port"] == 465:
-            with smtplib.SMTP_SSL(cfg["host"], cfg["port"], timeout=30, context=ctx) as srv:
-                srv.ehlo()
-                srv.login(cfg["user"], cfg["password"])
-                srv.sendmail(cfg["from_email"], [to], msg.as_string())
+        if port == 465:
+            logger.info(f"SMTP: opening SMTP_SSL connection to {host}:{port} (timeout=60s)")
+            try:
+                with smtplib.SMTP_SSL(host, port, timeout=60, context=ctx) as srv:
+                    logger.info("SMTP: connection established, sending EHLO")
+                    ehlo_resp = srv.ehlo()
+                    logger.info(f"SMTP: EHLO response: {ehlo_resp}")
+                    logger.info(f"SMTP: authenticating as {user}")
+                    srv.login(user, cfg["password"])
+                    logger.info("SMTP: authentication successful, sending message")
+                    srv.sendmail(from_email, [to], msg.as_string())
+            except socket.timeout as e:
+                logger.error(f"SMTP: socket timeout connecting to {host}:{port} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except socket.gaierror as e:
+                logger.error(f"SMTP: DNS resolution failed for {host} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except ConnectionRefusedError as e:
+                logger.error(f"SMTP: connection refused by {host}:{port} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except ssl.SSLError as e:
+                logger.error(f"SMTP: SSL handshake error with {host}:{port} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except smtplib.SMTPAuthenticationError as e:
+                logger.error(f"SMTP: authentication failed for {user} — {e}")
+                logger.error(traceback.format_exc())
+                return False
         else:
-            with smtplib.SMTP(cfg["host"], cfg["port"], timeout=30) as srv:
-                srv.ehlo()
-                srv.starttls(context=ctx)
-                srv.ehlo()
-                srv.login(cfg["user"], cfg["password"])
-                srv.sendmail(cfg["from_email"], [to], msg.as_string())
-        logger.info(f"Email sent to {to}: {subject}")
+            logger.info(f"SMTP: opening plain SMTP connection to {host}:{port} (timeout=60s)")
+            try:
+                with smtplib.SMTP(host, port, timeout=60) as srv:
+                    logger.info("SMTP: connection established, sending EHLO")
+                    ehlo_resp = srv.ehlo()
+                    logger.info(f"SMTP: EHLO response: {ehlo_resp}")
+                    logger.info("SMTP: initiating STARTTLS upgrade")
+                    starttls_resp = srv.starttls(context=ctx)
+                    logger.info(f"SMTP: STARTTLS response: {starttls_resp}")
+                    logger.info("SMTP: sending post-STARTTLS EHLO")
+                    ehlo2_resp = srv.ehlo()
+                    logger.info(f"SMTP: post-STARTTLS EHLO response: {ehlo2_resp}")
+                    logger.info(f"SMTP: authenticating as {user}")
+                    srv.login(user, cfg["password"])
+                    logger.info("SMTP: authentication successful, sending message")
+                    srv.sendmail(from_email, [to], msg.as_string())
+            except socket.timeout as e:
+                logger.error(f"SMTP: socket timeout connecting to {host}:{port} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except socket.gaierror as e:
+                logger.error(f"SMTP: DNS resolution failed for {host} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except ConnectionRefusedError as e:
+                logger.error(f"SMTP: connection refused by {host}:{port} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except ssl.SSLError as e:
+                logger.error(f"SMTP: SSL/STARTTLS error with {host}:{port} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+            except smtplib.SMTPAuthenticationError as e:
+                logger.error(f"SMTP: authentication failed for {user} — {e}")
+                logger.error(traceback.format_exc())
+                return False
+
+        logger.info(f"SMTP: email successfully sent to {to} — subject: {subject}")
         return True
+
     except Exception as e:
-        logger.warning(f"SMTP send error to {to}: {e}")
+        logger.error(f"SMTP: unexpected error sending to {to}: {e}")
+        logger.error(traceback.format_exc())
         return False
 
 

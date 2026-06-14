@@ -1075,6 +1075,126 @@ async def seed_admin():
 app.include_router(api)
 
 
+# ---------------------------------------------------------------------------
+# SMTP diagnostic endpoint — returns step-by-step connection info
+# ---------------------------------------------------------------------------
+
+@app.get("/api/test-smtp")
+async def test_smtp():
+    """
+    Attempt a live SMTP connection and return detailed diagnostic information.
+    Useful for diagnosing network/firewall/credential issues from Railway.
+    """
+    import ssl
+    import socket
+    import smtplib
+    import traceback
+    import time
+    from email_service import _smtp_config
+
+    cfg = _smtp_config()
+    host = cfg["host"]
+    port = cfg["port"]
+    user = cfg["user"]
+
+    steps: list = []
+    success = False
+    error_detail: str | None = None
+
+    def step(name: str, status: str, detail: str = ""):
+        steps.append({"step": name, "status": status, "detail": detail})
+        logging.info(f"[test-smtp] {name}: {status} — {detail}")
+
+    # 1. Config check
+    if not user or not cfg["password"]:
+        step("config", "error", "SMTP_USER or SMTP_PASSWORD env vars are not set")
+        return {"success": False, "steps": steps, "config": {"host": host, "port": port, "user": user or "(not set)"}}
+    step("config", "ok", f"host={host}, port={port}, user={user}")
+
+    # 2. DNS resolution
+    t0 = time.monotonic()
+    try:
+        resolved = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
+        addrs = list({r[4][0] for r in resolved})
+        step("dns", "ok", f"resolved {host} → {addrs} in {(time.monotonic()-t0)*1000:.0f}ms")
+    except socket.gaierror as e:
+        step("dns", "error", f"DNS lookup failed: {e}")
+        return {"success": False, "steps": steps}
+
+    # 3. Raw TCP connect (before SSL)
+    t0 = time.monotonic()
+    try:
+        sock = socket.create_connection((host, port), timeout=10)
+        sock.close()
+        step("tcp_connect", "ok", f"TCP connection to {host}:{port} succeeded in {(time.monotonic()-t0)*1000:.0f}ms")
+    except socket.timeout:
+        step("tcp_connect", "error", f"TCP connection to {host}:{port} timed out after 10s — likely blocked by firewall")
+        return {"success": False, "steps": steps}
+    except ConnectionRefusedError as e:
+        step("tcp_connect", "error", f"Connection refused by {host}:{port}: {e}")
+        return {"success": False, "steps": steps}
+    except OSError as e:
+        step("tcp_connect", "error", f"OS error connecting to {host}:{port}: {e}")
+        return {"success": False, "steps": steps}
+
+    # 4. SSL context
+    try:
+        ctx = ssl.create_default_context()
+        step("ssl_context", "ok", f"protocol={ctx.protocol}, verify_mode={ctx.verify_mode}")
+    except Exception as e:
+        step("ssl_context", "error", str(e))
+        return {"success": False, "steps": steps}
+
+    # 5. SMTP handshake
+    try:
+        if port == 465:
+            step("smtp_mode", "info", "Using SMTP_SSL (implicit TLS, port 465)")
+            t0 = time.monotonic()
+            with smtplib.SMTP_SSL(host, port, timeout=60, context=ctx) as srv:
+                step("smtp_connect", "ok", f"SMTP_SSL connected in {(time.monotonic()-t0)*1000:.0f}ms")
+                code, banner = srv.ehlo()
+                step("ehlo", "ok", f"code={code}, banner={banner!r}")
+                srv.login(user, cfg["password"])
+                step("auth", "ok", f"authenticated as {user}")
+                success = True
+        else:
+            step("smtp_mode", "info", f"Using SMTP + STARTTLS (port {port})")
+            t0 = time.monotonic()
+            with smtplib.SMTP(host, port, timeout=60) as srv:
+                step("smtp_connect", "ok", f"SMTP connected in {(time.monotonic()-t0)*1000:.0f}ms")
+                code, banner = srv.ehlo()
+                step("ehlo", "ok", f"code={code}, banner={banner!r}")
+                code2, msg2 = srv.starttls(context=ctx)
+                step("starttls", "ok", f"code={code2}, msg={msg2!r}")
+                code3, banner3 = srv.ehlo()
+                step("ehlo_post_starttls", "ok", f"code={code3}, banner={banner3!r}")
+                srv.login(user, cfg["password"])
+                step("auth", "ok", f"authenticated as {user}")
+                success = True
+    except socket.timeout as e:
+        step("smtp_connect", "error", f"Timed out during SMTP handshake: {e}")
+        error_detail = traceback.format_exc()
+    except ssl.SSLError as e:
+        step("ssl_handshake", "error", f"SSL error: {e}")
+        error_detail = traceback.format_exc()
+    except smtplib.SMTPAuthenticationError as e:
+        step("auth", "error", f"Authentication failed: {e}")
+        error_detail = traceback.format_exc()
+    except smtplib.SMTPException as e:
+        step("smtp", "error", f"SMTP error: {e}")
+        error_detail = traceback.format_exc()
+    except Exception as e:
+        step("smtp", "error", f"Unexpected error: {e}")
+        error_detail = traceback.format_exc()
+
+    return {
+        "success": success,
+        "steps": steps,
+        "traceback": error_detail,
+        "config": {"host": host, "port": port, "user": user},
+    }
+
+
 @app.on_event("startup")
 async def on_startup():
     try:
