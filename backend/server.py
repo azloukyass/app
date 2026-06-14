@@ -1076,6 +1076,77 @@ app.include_router(api)
 
 
 # ---------------------------------------------------------------------------
+# Outgoing IP diagnostic endpoint — identifies Railway's egress IP address
+# ---------------------------------------------------------------------------
+
+@app.get("/api/check-ip")
+async def check_ip():
+    """
+    Return the outgoing (egress) IP address(es) that Railway uses when making
+    external network connections.  Query several public IP-reflection services
+    so the result is reliable even if one is temporarily unavailable.
+
+    Use the reported IP to whitelist Railway on ai.atlax.com's firewall.
+    """
+    import socket
+
+    results: dict = {}
+    errors: dict = {}
+
+    # --- 1. Public IP-reflection services (HTTP) ---
+    services = {
+        "ipify":       "https://api.ipify.org?format=json",
+        "ipinfo":      "https://ipinfo.io/json",
+        "ifconfig_me": "https://ifconfig.me/all.json",
+        "icanhazip":   "https://icanhazip.com",
+    }
+
+    async with httpx.AsyncClient(timeout=8.0) as cl:
+        for name, url in services.items():
+            try:
+                r = await cl.get(url, headers={"Accept": "application/json, text/plain"})
+                r.raise_for_status()
+                ct = r.headers.get("content-type", "")
+                if "json" in ct:
+                    data = r.json()
+                    # Different services use different field names
+                    ip = (
+                        data.get("ip")
+                        or data.get("origin")
+                        or data.get("IP_ADDR")
+                        or str(data)
+                    )
+                else:
+                    ip = r.text.strip()
+                results[name] = ip
+            except Exception as e:
+                errors[name] = str(e)
+
+    # --- 2. Local hostname & DNS-resolved addresses ---
+    try:
+        hostname = socket.gethostname()
+        local_addrs = [info[4][0] for info in socket.getaddrinfo(hostname, None)]
+    except Exception as e:
+        hostname = f"(error: {e})"
+        local_addrs = []
+
+    # --- 3. Derive a single canonical egress IP (first successful result) ---
+    egress_ip = next(iter(results.values()), None)
+
+    return {
+        "egress_ip": egress_ip,
+        "all_results": results,
+        "errors": errors,
+        "hostname": hostname,
+        "local_addresses": list(set(local_addrs)),
+        "note": (
+            "Add 'egress_ip' (or all IPs in 'all_results') to the firewall whitelist "
+            "on ai.atlax.com so Railway can reach the SMTP server on port 465."
+        ),
+    }
+
+
+# ---------------------------------------------------------------------------
 # SMTP diagnostic endpoint — returns step-by-step connection info
 # ---------------------------------------------------------------------------
 
